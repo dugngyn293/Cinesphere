@@ -1,19 +1,108 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  background-color: #333;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  align-items: center;
+}
+
+.burger-menu {
+  background-color: #444;
+  padding: 10px;
+}
+
+.burger-menu ul {
+  list-style: none;
+  padding: 0;
+}
+
+.burger-menu li {
+  padding: 10px;
+  cursor: pointer;
+  color: white;
+}
+
+.burger-menu li:hover {
+  background-color: #555;
+}
+
+.search-bar {
+  margin: 15px;
+}
+
+.search-bar input {
+  padding: 8px;
+  width: 200px;
+}
+
+.search-bar button {
+  padding: 8px;
+}
+
+.content {
+  padding: 20px;
+}
+
 .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    text-align: center;
-  }
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.profile-section {
+  padding: 1em;
+}
+
+.badge-info {
+  color: #ccc;
+  font-size: 13px;
+}
+.playlist-popup {
+  position: relative;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin-top: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  transition: all 0.2s ease-in-out;
+}
+
+.playlist-popup .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.playlist-popup a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.playlist-popup a:hover {
+  text-decoration: underline;
+}
