@@ -5,6 +5,7 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const dotenv = require("dotenv");
 var path = require('path');
+const fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
@@ -92,10 +93,42 @@ app.get("/logout", (req, res) => {
   });
 });
 
+
+app.get("/api/search", async (req, res) => {
+  const query = req.query.query;
+  const apiKey = process.env.TMDB_API_KEY;
+
+  try {
+    const tmdbRes = await fetch(
+      `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`
+    );
+
+    const data = await tmdbRes.json();
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching from TMDB:", err);
+    res.status(500).json({ error: "Failed to fetch search results" });
+  }
+});
+
+app.get('/api/trailer', async (req, res) => {
+  const id = req.query.id;
+  try {
+    const apiKey = process.env.TMDB_API_KEY;
+    const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${apiKey}`);
+    const data = await tmdbRes.json();
+    const trailer = data.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+    const trailerUrl = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
+    res.json({ trailerUrl });
+  } catch (err) {
+    console.error("Trailer error:", err);
+    res.status(500).json({ error: "Failed to fetch trailer" });
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

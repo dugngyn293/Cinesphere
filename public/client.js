@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted, computed } = Vue;
+const { createApp, ref, onMounted, computed, nextTick } = Vue;
 
 createApp({
   setup() {
@@ -6,7 +6,6 @@ createApp({
       displayName: '',
       email: '',
       photo: '',
-      voteScore: 0,
       checkinDays: 0,
     });
 
@@ -26,6 +25,15 @@ createApp({
       { name: "Favorites" },
       { name: "Watch Later" }
     ]);
+    const searchQuery = ref("");
+    const searchResults = ref([]);
+    const searchResultsSection = ref(null);
+    const genreMap = {
+      28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+      99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+      27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance", 878: "Sci-Fi",
+      10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western"
+    };
     
     const createNewPlaylist = () => {
       const name = prompt("Enter playlist name:", "New Playlist");
@@ -47,7 +55,62 @@ createApp({
     const closePlaylist = () => {
       selectedPlaylist.value = null;
     };
-
+    
+    const fetchTrailerUrl = async (movieId) => {
+      try {
+        const res = await fetch(`/api/trailer?id=${movieId}`);
+        const data = await res.json();
+        return data.trailerUrl || null;
+      } catch (err) {
+        console.error("Trailer fetch failed", err);
+        return null;
+      }
+    };
+    
+    const searchMovies = async () => {
+      console.log("Searching for:", searchQuery.value);
+      const url = `/api/search?query=${searchQuery.value}`;
+    
+      try {
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        const data = await res.json();
+    
+        const enrichedResults = await Promise.all(
+          (data.results || []).map(async (movie) => {
+            const trailerUrl = await fetchTrailerUrl(movie.id);
+    
+            return {
+              id: movie.id,
+              title: movie.title,
+              releaseYear: movie.release_date?.slice(0, 4) || "N/A",
+              genres: movie.genre_ids?.map(id => genreMap[id]).filter(Boolean).join(", "),
+              overview: movie.overview,
+              poster: movie.poster_path
+                ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                : null,
+              trailerUrl,
+            };
+          })
+        );
+    
+        searchResults.value = enrichedResults;
+        nextTick(() => {
+          searchResultsSection.value?.scrollIntoView({ behavior: 'smooth' });
+        });
+    
+      } catch (err) {
+        console.error("Error fetching movies:", err);
+      }
+    };
+    
+    
+    
+    
+    
+    
     
     onMounted(async () => {
       try {
@@ -57,7 +120,6 @@ createApp({
           user.value = {
             ...user.value,
             ...data.user,
-            voteScore: data.user.voteScore ?? 0,
             checkinDays: data.user.checkinDays ?? 0,
           };
           showModal.value = false;
@@ -91,7 +153,10 @@ createApp({
       selectedPlaylist,
       openPlaylist,
       closePlaylist,
-
+      searchQuery,
+      searchResults,
+      searchMovies,
+      searchResultsSection,
     };
   },
   template: `
@@ -133,8 +198,35 @@ createApp({
 
       <!-- Search Bar -->
       <div class="search-bar">
-        <input type="text" placeholder="Search for movies, playlists..." />
-        <button>Search</button>
+        <input type="text" v-model="searchQuery" placeholder="Search for movies" />
+        <button @click="searchMovies">Search</button>
+      </div>
+      <!-- Search Results -->
+      <div ref="searchResultsSection" v-if="searchResults.length > 0" class="search-results">
+        <h3>Search Results:</h3>
+        <ul>
+          <li v-for="movie in searchResults" :key="movie.id" style="margin-bottom: 20px; display: flex; gap: 12px;">
+            <img
+              v-if="movie.poster"
+              :src="movie.poster"
+              alt="Poster"
+              style="height: 150px; border-radius: 4px; object-fit: cover;"
+            />
+            <div>
+              <h4>{{ movie.title }}</h4>
+              <p>
+                <strong>Year:</strong> {{ movie.releaseYear }}<br>
+                <strong>Genres:</strong> {{ movie.genres || 'N/A' }}
+              </p>
+              <p style="font-style: italic;">{{ movie.overview }}</p>
+              <p v-if="movie.trailerUrl">
+                <a :href="movie.trailerUrl" target="_blank">🎬 Watch Trailer</a>
+              </p>
+            </div>
+          </li>
+        </ul>
+
+
       </div>
 
       <!-- Active Section -->
@@ -147,9 +239,6 @@ createApp({
           <h2>Your Profile</h2>
           <p><strong>Username:</strong> {{ user.displayName }}</p>
           <p><strong>Email:</strong> {{ user.email }}</p>
-
-          <!-- Vote Score -->
-          <p><strong>Reputation Score:</strong> {{ user.voteScore }} ⭐</p>
 
           <!-- Check-in Badge -->
           <div class="badge-section">
