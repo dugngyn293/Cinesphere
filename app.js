@@ -126,6 +126,51 @@ app.get('/api/trailer', async (req, res) => {
   }
 });
 
+app.get('/api/rating', (req, res) => {
+  const movieId = req.query.movieId;
+  const rating = movieRatings[movieId] || { total: 0, votes: 0 };
+  const average = rating.votes ? rating.total / rating.votes : 0;
+  res.json({ average, votes: rating.votes });
+});
+
+
+app.post('/api/rate', (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Not logged in' });
+
+  const email = req.user.emails?.[0]?.value;
+  const { movieId, rating } = req.body;
+
+  if (!userVotes[email]) userVotes[email] = {};
+  if (userVotes[email][movieId] != null) {
+    return res.status(400).json({ error: 'You already voted for this movie.' });
+  }
+
+  userVotes[email][movieId] = rating;
+
+  if (!movieRatings[movieId]) movieRatings[movieId] = { total: 0, votes: 0 };
+  movieRatings[movieId].total += rating;
+  movieRatings[movieId].votes += 1;
+
+  res.json({
+    average: movieRatings[movieId].total / movieRatings[movieId].votes,
+    votes: movieRatings[movieId].votes,
+  });
+});
+
+app.get("/api/find-films", async (req, res) => {
+  const genres = req.query.genres; 
+  const apiKey = process.env.TMDB_API_KEY;
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/discover/movie?with_genres=${genres}&api_key=${apiKey}`);
+    const data = await response.json();
+
+    res.json({ results: data.results });
+  } catch (error) {
+    console.error("Error fetching films:", error);
+    res.status(500).json({ error: "Failed to fetch films." });
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
