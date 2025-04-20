@@ -171,6 +171,18 @@ app.get("/api/find-films", async (req, res) => {
   }
 });
 
+app.get("/api/top-rated", async (req, res) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${apiKey}&language=en-US&page=1`);
+    const data = await response.json();
+    res.json({ results: data.results });
+  } catch (error) {
+    console.error("Error fetching top-rated movies:", error);
+    res.status(500).json({ error: "Failed to fetch top-rated movies." });
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });

@@ -235,8 +235,77 @@ createApp({
       }
     };    
     
+    const topMovies = ref([]);
+
+    const fetchTopMovies = async () => {
+      try {
+        const res = await fetch("/api/top-rated");
+        const data = await res.json();
+
+        const enrichedResults = await Promise.all(
+          (data.results || []).map(async (movie) => {
+            const trailerUrl = await fetchTrailerUrl(movie.id);
+            return {
+              id: movie.id,
+              title: movie.title,
+              releaseYear: movie.release_date?.slice(0, 4) || "N/A",
+              genres: movie.genre_ids?.map(id => genreMap[id]).filter(Boolean).join(", "),
+              overview: movie.overview,
+              poster: movie.poster_path
+                ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                : null,
+              trailerUrl,
+              rating: 0,
+              votes: 0,
+            };
+          })
+        );
+
+        topMovies.value = enrichedResults;
+      } catch (err) {
+        console.error("Error fetching top movies:", err);
+      }
+    };
     
-    
+    const topMoviesresults=ref({"Animation":[],"Action":[],"Horror":[],"Romance":[]});
+    const findTopMoviesByGenres = async () => {
+      const genresF = ref([16,28,27,10749]);
+      for (let query of genresF.value) {
+        try {
+          const res = await fetch(`/api/find-films?genres=${query}`);
+          const data = await res.json();
+      
+          if (data.results && data.results.length > 0) {
+            const enrichedResults = await Promise.all(
+              data.results.map(async (movie) => {
+                const trailerUrl = await fetchTrailerUrl(movie.id); 
+                return {
+                  id: movie.id,
+                  title: movie.title,
+                  releaseYear: movie.release_date?.slice(0, 4) || "N/A",
+                  genres: movie.genre_ids?.map(id => genreMap[id]).filter(Boolean).join(", "),
+                  overview: movie.overview,
+                  poster: movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                    : null,
+                  trailerUrl,
+                  rating: 0, 
+                  votes: 0, 
+                };
+              })
+            );
+      
+            topMoviesresults.value[genreMap[query]] = enrichedResults.slice(0, 10); 
+      
+          } else {
+            alert("No films found for the selected genres.");
+          }
+        } catch (err) {
+          console.error("Error fetching suggested films:", err);
+          alert("Something went wrong while fetching films. Please try again.");
+        }
+      }
+    };
     
     onMounted(async () => {
       try {
@@ -250,6 +319,9 @@ createApp({
             contributionScore: data.user.contributionScore ?? 0,
           };
           showModal.value = false;
+          fetchTopMovies();
+          console.log(topMovies);
+          findTopMoviesByGenres();
         }
       } catch {
         showModal.value = true;
@@ -294,6 +366,10 @@ createApp({
       genreMap, 
       selectedGenres,
       findSuggestedFilms,
+      topMovies,
+      fetchTopMovies,
+      findTopMoviesByGenres,
+      topMoviesresults,
       
     };
   },
@@ -420,7 +496,115 @@ createApp({
           </div>
 
           <h2>Home</h2>
-          <p>Coming soon...</p>
+          <!-- Top Movies Section -->
+          <div class="search-results-box" v-if="topMovies.length > 0">
+            <h3>🔥 Top Movies</h3>
+            <ul>
+              <li
+                v-for="movie in topMovies"
+                :key="movie.id"
+                style="margin-bottom: 20px; display: flex; gap: 12px;"
+              >
+                <img
+                  v-if="movie.poster"
+                  :src="movie.poster"
+                  alt="Poster"
+                  style="height: 150px; border-radius: 4px; object-fit: cover;"
+                />
+                <div>
+                  <h4>{{ movie.title }}</h4>
+                  <p>
+                    <strong>Year:</strong> {{ movie.releaseYear }}<br />
+                    <strong>Genres:</strong> {{ movie.genres || 'N/A' }}
+                  </p>
+                  <p style="font-style: italic;">{{ movie.overview }}</p>
+                  <p v-if="movie.trailerUrl">
+                    <a :href="movie.trailerUrl" target="_blank">🎬 Watch Trailer</a>
+                  </p>
+                  <p>
+                    <button @click="addToPlaylist(movie)">➕ Add to Playlist</button>
+                  </p>
+
+                  <p>
+                    <strong>Rating:</strong> {{ movie.rating.toFixed(1) }} ({{ movie.votes }})
+                  </p>
+
+                  <p>
+                    Rate:
+                    <button
+                      v-for="star in 5"
+                      :key="star"
+                      :disabled="ratedMovies.has(user.email + '-' + movie.id)"
+                      @click="rateMovie(movie, star)"
+                    >
+                      {{ star }}⭐
+                    </button>
+                    <span
+                      v-if="ratedMovies.has(user.email + '-' + movie.id)"
+                      style="margin-left: 8px; color: green;"
+                    >
+                      ✅ You rated this!
+                    </span>
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <!-- Top genre movies -->
+          <div class="search-results-wrapper">
+            <div v-for="(movies, genre) in topMoviesresults" :key="genre" class="search-results-box" >
+              <h3>{{ genre }} Movies</h3>
+              <ul>
+                <li
+                  v-for="movie in movies"
+                  :key="movie.id"
+                  style="margin-bottom: 20px; display: flex; gap: 12px;"
+                >
+                  <img
+                    v-if="movie.poster"
+                    :src="movie.poster"
+                    alt="Poster"
+                    style="height: 150px; border-radius: 4px; object-fit: cover;"
+                  />
+                  <div>
+                    <h4>{{ movie.title }}</h4>
+                    <p>
+                      <strong>Year:</strong> {{ movie.releaseYear }}<br />
+                      <strong>Genres:</strong> {{ movie.genres || 'N/A' }}
+                    </p>
+                    <p style="font-style: italic;">{{ movie.overview }}</p>
+                    <p v-if="movie.trailerUrl">
+                      <a :href="movie.trailerUrl" target="_blank">🎬 Watch Trailer</a>
+                    </p>
+                    <p>
+                      <button @click="addToPlaylist(movie)">➕ Add to Playlist</button>
+                    </p>
+                    <p>
+                      <strong>Rating:</strong> {{ movie.rating.toFixed(1) }} ({{ movie.votes }})
+                    </p>
+                    <p>
+                      Rate:
+                      <button
+                        v-for="star in 5"
+                        :key="star"
+                        :disabled="ratedMovies.has(user.email + '-' + movie.id)"
+                        @click="rateMovie(movie, star)"
+                      >
+                        {{ star }}⭐
+                      </button>
+                      <span
+                        v-if="ratedMovies.has(user.email + '-' + movie.id)"
+                        style="margin-left: 8px; color: green;"
+                      >
+                        ✅ You rated this!
+                      </span>
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
         </div>
         <div v-if="activeSection === 'profile'" class="profile-section">
           <h2>Your Profile</h2>
