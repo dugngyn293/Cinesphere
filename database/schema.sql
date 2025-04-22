@@ -12,8 +12,8 @@ CREATE TABLE movies (
   external_id  INT NOT NULL UNIQUE,  -- TMDb id
   title        VARCHAR(255),
   release_date DATE,
-  director     VARCHAR(255), NOT NULL
-  poster_url   VARCHAR(255),
+  director     VARCHAR(255) NOT NULL,
+  poster_url   VARCHAR(255)
 );
 
 -- on delete cascade = delete all items when a user is deleted
@@ -32,7 +32,7 @@ CREATE TABLE reviews (
   id  BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   user_id    BIGINT UNSIGNED,
   movie_id   BIGINT UNSIGNED,
-  rating     TINYINT UNSIGNED CHECK (rating BETWEEN 1 AND 10),
+  rating DECIMAL(3,1) CHECK (rating >= 1 AND rating <= 10),
   review_text    TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uniq_user_movie (user_id, movie_id), -- avoid duplicates
