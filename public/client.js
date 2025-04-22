@@ -34,8 +34,8 @@ createApp({
     });
 
     const playlists = ref([
-      { name: "Favorites" },
-      { name: "Watch Later" }
+      { name: "Favorites" ,movies:[]},
+      { name: "Watch Later",movies:[] }
     ]);
 
     const searchQuery = ref("");
@@ -54,8 +54,13 @@ createApp({
     const createNewPlaylist = () => {
       const name = prompt("Enter playlist name:", "New Playlist");
       if (name) {
-        playlists.value.push({ name });
+        const newPlaylist = {
+          name: `Playlist ${playlists.length + 1}`,
+          movies: []
+        };
+        playlists.value.push(newPlaylist);
       }
+      
     };
 
     const deletePlaylist = (index) => {
@@ -171,10 +176,70 @@ createApp({
     };
 
 
+    const showPlaylistBox = ref(false);
+    const selectedPlaylists = ref([]);
+    const newPlaylistName = ref("");
+    let pendingMovie = null;
+
     const addToPlaylist = (movie) => {
-      alert(`Added "${movie.title}" to your playlist!`); // Replace with real logic later
+      pendingMovie = movie;
+      selectedPlaylists.value = [];
+      newPlaylistName.value = "";
+      showPlaylistBox.value = true;
     };
 
+    const confirmAddToPlaylist = () => {
+      const movie = pendingMovie;
+      if (!movie) return;
+
+      // Add to selected existing playlists
+      selectedPlaylists.value.forEach((playlistName) => {
+        const playlist = playlists.value.find(p => p.name === playlistName);
+        if (playlist) {
+          if (!playlist.movies) playlist.movies = [];
+          const exists = playlist.movies.find(m => m.id === movie.id);
+          if (!exists) playlist.movies.push(movie);
+        }
+      });
+
+      // Create and add to new playlist
+      const newName = newPlaylistName.value.trim();
+      if (newName) {
+        if (!playlists.value.find(p => p.name === newName)) {
+          playlists.value.push({ name: newName, movies: [movie] });
+        } else {
+          const existing = playlists.value.find(p => p.name === newName);
+          if (!existing.movies.find(m => m.id === movie.id)) {
+            existing.movies.push(movie);
+          }
+        }
+      }
+
+      // Cleanup
+      showPlaylistBox.value = false;
+      pendingMovie = null;
+      alert(`Added "${movie.title}" to selected playlist(s)`);
+    };
+
+    const cancelAddToPlaylist = () => {
+      showPlaylistBox.value = false;
+      pendingMovie = null;
+    };
+
+    const removeFromPlaylist =(movie) =>{
+      if (!selectedPlaylist.value || !selectedPlaylist.value.movies) {
+        console.error("No selected playlist or it doesn't have movies");
+        return;
+      }
+    
+      selectedPlaylist.value.movies = selectedPlaylist.value.movies.filter(
+        m => m.id !== movie.id
+      );
+      const index =selectedPlaylist.value.movies.findIndex(m => m.id === movie.id);
+      if (index !== -1) {
+        selectedPlaylist.value.movies.splice(index, 1);
+      }
+    };
     
     
     const toggleGenre = (genreId) => {
@@ -315,7 +380,7 @@ createApp({
           user.value = {
             ...user.value,
             ...data.user,
-            checkinDays: data.user.checkinDays ?? 0,
+            checkinDays: data.user.checkinDays ?? 1,
             contributionScore: data.user.contributionScore ?? 0,
           };
           showModal.value = false;
@@ -370,6 +435,12 @@ createApp({
       fetchTopMovies,
       findTopMoviesByGenres,
       topMoviesresults,
+      showPlaylistBox,
+      selectedPlaylists,
+      newPlaylistName,
+      confirmAddToPlaylist,
+      cancelAddToPlaylist,
+      removeFromPlaylist,
       
     };
   },
@@ -674,8 +745,48 @@ createApp({
           <div v-if="selectedPlaylist" class="playlist-popup">
             <button @click="closePlaylist" class="close-btn">❌</button>
             <h3>{{ selectedPlaylist.name }}</h3>
-            <p><a href="#">📽️ View Movies in this Playlist</a></p>
+
+            <div class="search-results-box" v-if="selectedPlaylist.movies && selectedPlaylist.movies.length > 0">
+              <ul>
+                <li
+                  v-for="movie in selectedPlaylist.movies"
+                  :key="movie.id"
+                  style="margin-bottom: 20px; display: flex; gap: 12px;"
+                >
+                  <img
+                    v-if="movie.poster"
+                    :src="movie.poster"
+                    alt="Poster"
+                    style="height: 150px; border-radius: 4px; object-fit: cover;"
+                  />
+                  <div>
+                    <h4>{{ movie.title }}</h4>
+                    <p>
+                      <strong>Year:</strong> {{ movie.releaseYear }}<br />
+                      <strong>Genres:</strong> {{ movie.genres || 'N/A' }}
+                    </p>
+                    <p style="font-style: italic;">{{ movie.overview }}</p>
+                    <p v-if="movie.trailerUrl">
+                      <a :href="movie.trailerUrl" target="_blank">🎬 Watch Trailer</a>
+                    </p>
+
+                    <p>
+                      <button @click="removeFromPlaylist(movie)">❌ Remove from Playlist</button>
+                    </p>
+
+                    <p>
+                      <strong>Rating:</strong> {{ movie.rating.toFixed(1) }} ({{ movie.votes }})
+                    </p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div v-else>
+              <p>No movies in this playlist yet.</p>
+            </div>
           </div>
+
         </div>
 
 
@@ -752,6 +863,26 @@ createApp({
 
           </div>
         </div>
+        <div v-if="showPlaylistBox" class="playlist-box-overlay">
+        <div class="playlist-box">
+          <h4>Select Playlists</h4>
+          <div v-for="(playlist, index) in playlists" :key="index">
+            <input type="checkbox" :id="'pl-' + index" v-model="selectedPlaylists" :value="playlist.name">
+            <label :for="'pl-' + index">{{ playlist.name }}</label>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <label>New Playlist:</label>
+            <input v-model="newPlaylistName" placeholder="Optional new playlist" />
+          </div>
+
+          <div class="playlist-box-buttons">
+            <button @click="confirmAddToPlaylist">Add</button>
+            <button @click="cancelAddToPlaylist">Cancel</button>
+          </div>
+        </div>
+      </div>
+
 
     </div>
   `
