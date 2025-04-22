@@ -49,7 +49,7 @@ CREATE TABLE achievements (
 
 CREATE TABLE user_achievements (
   user_id         BIGINT UNSIGNED,
-  achievement_id  INT UNIGNED,
+  achievement_id  INT UNSIGNED,
   achieved_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, achievement_id),
   FOREIGN KEY (user_id)        REFERENCES users(id)        ON DELETE CASCADE,
