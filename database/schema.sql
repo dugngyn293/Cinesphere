@@ -1,5 +1,5 @@
 CREATE TABLE users (
-  id     BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  id          BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   username    VARCHAR (255) NOT NULL UNIQUE,
   email       VARCHAR(255) NOT NULL UNIQUE,
   password    CHAR(60)     NOT NULL,        
@@ -41,7 +41,7 @@ CREATE TABLE reviews (
 );
 
 CREATE TABLE achievements (
-  id          INT PRIMARY KEY AUTO_INCREMENT,
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   code        VARCHAR(50) UNIQUE,
   label       VARCHAR(100),
   description TEXT
@@ -49,7 +49,7 @@ CREATE TABLE achievements (
 
 CREATE TABLE user_achievements (
   user_id         BIGINT UNSIGNED,
-  achievement_id  INT,
+  achievement_id  INT UNIGNED,
   achieved_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, achievement_id),
   FOREIGN KEY (user_id)        REFERENCES users(id)        ON DELETE CASCADE,
