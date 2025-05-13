@@ -101,7 +101,7 @@ const Header = {
         { code: 'tu', name: 'TU' }
       ],
       navItems: [
-        { text: 'Home', link: './index.html' },
+        { text: 'Home', link: '../guests/index.html' },
         { text: 'Movie', link: '#' },
         { text: 'Tv Show', link: '#' },
         { text: 'Web Series', link: '#' },
