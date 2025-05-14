@@ -4,7 +4,7 @@ import { pool } from '../database/pool.js';
 export const findByEmail = async (email) => {
     const query = 'SELECT * FROM users WHERE email = ?';
     try {
-        const [rows] = await pool.query(query, [email]); // 
+        const [rows] = await pool.query(query, [email]); //
         return rows[0];
     } catch (error) {
         console.error('Error finding user by email:', error);
@@ -30,14 +30,14 @@ export const create = async (userData) => {
   const { username, email, password } = userData;
 
   const query = `
-    INSERT INTO users (username, email, password) 
+    INSERT INTO users (username, email, password)
     VALUES (?, ?, ?);
   `
-  
+
   try {
     const [results] = await pool.query(query, [username, email, password]);
     // Return an object with the new user's ID and the data provided
-    return { id: results.insertId, ...userData }; 
+    return { id: results.insertId, ...userData };
   } catch (error) {
     console.error('Error creating user:', error);
     // Handle potential erors (e.g., duplicate email/username)
@@ -61,33 +61,24 @@ export const findById = async (id) => {
 };
 
 // Function to update user data (excluding password, handle password separately in controller/service)
-export const update = async (id, userData) => {
-  // Construct SET clause dynamically based on userData keys
-  // Example: Only updates email and username. Adapt for other fields.
-  const fieldsToUpdate = {};
-  if (userData.email) fieldsToUpdate.email = userData.email;
-  if (userData.username) fieldsToUpdate.username = userData.username;
-  // Add other updatable fields here, e.g., bio, profile_picture_url, etc.
+// example userData: , userData = { email: 'a@b.com', username: undefined, profile_image_url: 'url' }
 
-  if (Object.keys(fieldsToUpdate).length === 0) {
-    return { affectedRows: 0, message: 'No fields to update' };
+const entries = Object.entries(userData);
+const setParts = [];
+const values = [];
+
+for (const [key, value] of entries) {
+  if (value !== undefined) {
+    setParts.push(`${key} = ?`);
+    values.push(value);
   }
+}
 
-  const setClause = Object.keys(fieldsToUpdate).map(key => `${key} = ?`).join(', ');
-  const values = [...Object.values(fieldsToUpdate), id];
+if (setParts.length === 0) return { affectedRows: 0, message: 'No fields to update' };
 
-  const query = `UPDATE users SET ${setClause} WHERE id = ?`;
-  try {
-    const [results] = await pool.query(query, values);
-    return { affectedRows: results.affectedRows }; // Returns how many rows were changed
-  } catch (error) {
-    console.error('Error updating user:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
-      console.error('Update failed due to duplicate username or email.');
-    }
-    throw error;
-  }
-};
+const query = `UPDATE users SET ${setParts.join(', ')} WHERE id = ?`;
+values.push(id);
+const [results] = await pool.query(query, values);
 
 // Function to delete a user by ID
 export const deleteUser = async (id) => {
@@ -110,7 +101,7 @@ export const findUserMovies = async (userId) => {
     const [rows] = await pool.query(query, [userId]);
     return rows.map(row => row.movie_id); // Returns an array of movie_ids
   } catch (error) {
-    console.error('Error finding user movies:', error);
+    console.error('No movies found for user', userId);
     throw error;
   }
 };
@@ -171,7 +162,7 @@ export const findUserAchievements = async (userId) => {
 
 // Function to add an achievement to a user
 export const addUserAchievement = async (userId, achievementId) => {
-  // achieved_at defaults to CURRENT_TIMESTAMP in schema
+  // achieved_at CURRENT_TIMESTAMP
   const query = 'INSERT INTO user_achievements (user_id, achievement_id) VALUES (?, ?)';
   try {
     const [results] = await pool.query(query, [userId, achievementId]);
@@ -182,42 +173,6 @@ export const addUserAchievement = async (userId, achievementId) => {
       return { affectedRows: 0, message: 'User already has this achievement' };
     }
     console.error('Error adding user achievement:', error);
-    throw error;
-  }
-};
-
-// Function to save password reset token details for a user
-export const savePasswordResetToken = async (userId, hashedToken, expiresAt) => {
-  const query = 'UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE id = ?';
-  try {
-    const [results] = await pool.query(query, [hashedToken, expiresAt, userId]);
-    return results.affectedRows > 0;
-  } catch (error) {
-    console.error('Error saving password reset token:', error);
-    throw error;
-  }
-};
-
-// Function to find a user by a hashed password reset token (and check expiry in controller)
-export const findUserByHashedPasswordResetToken = async (hashedToken) => {
-  const query = 'SELECT * FROM users WHERE password_reset_token = ?';
-  try {
-    const [rows] = await pool.query(query, [hashedToken]);
-    return rows[0]; // Returns user or undefined
-  } catch (error) {
-    console.error('Error finding user by reset token:', error);
-    throw error;
-  }
-};
-
-// Function to clear password reset token details for a user (e.g., after successful reset or expiry)
-export const clearPasswordResetToken = async (userId) => {
-  const query = 'UPDATE users SET password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?';
-  try {
-    const [results] = await pool.query(query, [userId]);
-    return results.affectedRows > 0;
-  } catch (error) {
-    console.error('Error clearing password reset token:', error);
     throw error;
   }
 };
