@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "project",
   "version": "0.0.0",
@@ -23,3 +24,28 @@
     "vue": "^3.5.13"
   }
 }
+=======
+{
+  "name": "project",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^16.5.0",
+    "express": "~4.16.1",
+    "express-session": "^1.18.1",
+    "http-errors": "~1.6.3",
+    "morgan": "~1.9.1",
+    "mysql2": "^3.14.0",
+    "node-fetch": "^2.7.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pug": "^3.0.3",
+    "vue": "^3.5.13"
+  }
+}
+>>>>>>> 4d4c791885fbd1c3eecb1debf5ca87e85a0a5ef6
