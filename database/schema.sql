@@ -4,7 +4,9 @@ CREATE TABLE users (
   email       VARCHAR(255) NOT NULL UNIQUE,
   password    CHAR(60)     NOT NULL,        
   role        ENUM('user','admin') DEFAULT 'user',
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  password_reset_token CHAR(64) DEFAULT NULL, -- Stores SHA256 hash of reset token
+  password_reset_expires DATETIME DEFAULT NULL
 );
 
 CREATE TABLE movies (
