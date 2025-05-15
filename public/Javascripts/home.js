@@ -1,9 +1,25 @@
 import { createApp } from 'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.esm-browser.js';
+import { SignUpForm } from './sign-up.js';
+import { SignInForm } from './sign-in.js';
+import { UserProfile } from './user-profile.js';
 
-// Main App Component
 const App = {
+  data() {
+    return {
+      showSignupForm: false,
+      showSigninForm: false,
+      showProfileForm: false,
+    };
+  },
   template: `
-    <Header />
+    <Header 
+      @open-signup="showSignupForm = true"
+      @open-signin="showSigninForm = true"
+      @open-profile="showProfileForm = true" />
+
+    <SignUpForm :visible="showSignupForm" @close="showSignupForm = false" />
+    <SignInForm :visible="showSigninForm" @close="showSigninForm = false" />
+    <UserProfile :visible="showProfileForm" @close="showProfileForm = false" />
     <main>
       <article>
         <HeroSection />
@@ -21,12 +37,7 @@ const App = {
     </main>
     <Footer />
     <GoToTop />
-  `,
-  data() {
-    return {
-      // Global app state can go here
-    }
-  }
+  `
 };
 
 // Header Component
@@ -55,7 +66,12 @@ const Header = {
             </select>
           </div>
 
-          <button class="btn btn-primary">Sign in</button>
+          <button class="btn btn-primary" @click="$emit('open-signin')">Sign in</button>
+
+          <button class="btn btn-primary" @click="$emit('open-signup')">Sign up</button>
+          <div class="settings-button">
+            <img src="/images/avatar-default.png" class="user-avatar" @click="$emit('open-profile')" />
+          </div>
         </div>
 
         <button class="menu-open-btn" @click="openMenu">
@@ -1063,4 +1079,10 @@ const CtaSection = {
   app.component('SectionTitle', SectionTitle);
   
   // Mount the app
+  app.component('SignInForm', SignInForm);
+  app.component('SignUpForm', SignUpForm);
+  app.component('UserProfile', UserProfile);
+  
+
+
   app.mount('#app');
