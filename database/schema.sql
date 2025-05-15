@@ -4,7 +4,9 @@ CREATE TABLE users (
   email       VARCHAR(255) NOT NULL UNIQUE,
   password    CHAR(60)     NOT NULL,        
   role        ENUM('user','admin') DEFAULT 'user',
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  google_id   VARCHAR(255) UNIQUE DEFAULT NULL, -- To store Google's unique user ID
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  profile_image_url VARCHAR(2083) DEFAULT NULL -- URL for user's profile image
 );
 
 CREATE TABLE movies (
