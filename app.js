@@ -8,6 +8,7 @@ var path = require('path');
 const fetch = require('node-fetch');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const UserRepo = require('./repositories/userRepo.js'); // Import user repository
 
 dotenv.config();
 var indexRouter = require('./routes/index');
@@ -48,19 +49,68 @@ passport.use(
       callbackURL: "/auth/google/callback",
       scope: ["profile", "email"], 
     },
-    (accessToken, refreshToken, profile, done) => {
-      return done(null, profile);
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // profile contains information from Google
+        const googleId = profile.id;
+        const email = profile.emails && profile.emails[0] && profile.emails[0].value;
+        const displayName = profile.displayName;
+        const profileImageUrl = profile.photos && profile.photos[0] && profile.photos[0].value;
+
+        if (!email) {
+          return done(new Error("Email not provided by Google"), null);
+        }
+
+        let user = await UserRepo.findByGoogleId(googleId);
+
+        if (!user) {
+          // If user not found by googleId, check by email to link accounts or find existing local user
+          user = await UserRepo.findByEmail(email);
+          if (user) {
+            // User exists with this email but not linked to this Google ID yet.
+            // Optionally, update user to add google_id and potentially profile_image_url if it's better
+            // For now, we'll proceed assuming this user should be linked.
+            // If you want to update: await UserRepo.update(user.id, { google_id: googleId, profile_image_url: profileImageUrl });
+            // And then re-fetch: user = await UserRepo.findById(user.id);
+            // To keep it simple for now, we will create a new user if no googleId match, 
+            // or you could throw an error / ask user to link manually if email is found but googleId is not.
+            // For this example, we will prioritize googleId. If no googleId, create new user if email isn't already tied to a *different* googleId.
+          } 
+        }
+
+        if (!user) {
+          // User doesn't exist, create a new one
+          // Ensure username is unique if display name is used directly
+          // For simplicity, using displayName. Consider a strategy for username uniqueness.
+          const newUser = {
+            google_id: googleId,
+            email: email,
+            username: displayName, // Or generate a unique username
+            profile_image_url: profileImageUrl,
+            // Password is not set for OAuth users
+          };
+          user = await UserRepo.create(newUser);
+        }
+        return done(null, user); // user should be your user object from your database
+      } catch (err) {
+        return done(err, null);
+      }
     }
   )
 );
 
 
 passport.serializeUser((user, done) => {
-  done(null, user);
+  done(null, user.id); // Serialize user by their database ID
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await UserRepo.findById(id); // Fetch user by ID from database
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
 });
 
 app.get("/auth/google",
