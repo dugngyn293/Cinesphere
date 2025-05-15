@@ -1,44 +1,100 @@
 import { createApp } from 'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.esm-browser.js';
+
 import { SignUpForm } from './sign-up.js';
 import { SignInForm } from './sign-in.js';
 import { UserProfile } from './user-profile.js';
+import { MovieCard } from './MovieCard.js';
+import { SectionTitle } from './SectionTitle.js';
+import { TopTenAllTimes } from './top-10-all.js';
+import { CelebritiesSection } from './CelebritiesSection.js';
+import { TopRatedMovies } from './TopRatedMovies.js';
+import { TvSeries } from './TvSeries.js';
+import { TopTenUS } from './TopTenUS.js';
+import { TopTenChinese } from './TopTenChinese.js';
+import { TopTenKorean } from './TopTenKorean.js';
+import { TopTenAnime } from './TopTenAnime.js';
 
 const App = {
+  components: {
+    SignUpForm,
+    SignInForm,
+    UserProfile,
+    MovieCard,
+    SectionTitle,
+    TopTenAllTimes,
+    CelebritiesSection,
+    TopRatedMovies,
+    TvSeries,
+    TopTenUS,
+    TopTenChinese,
+    TopTenKorean,
+    TopTenAnime
+  },
   data() {
     return {
       showSignupForm: false,
       showSigninForm: false,
       showProfileForm: false,
+      isDarkMode: false
     };
   },
+  mounted() {
+    this.isDarkMode = localStorage.getItem('theme') === 'dark';
+    this.applyTheme();
+  },
+  methods: {
+    toggleDarkMode() {
+      this.isDarkMode = !this.isDarkMode;
+      localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
+      this.applyTheme();
+    },
+    applyTheme() {
+      if (this.isDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  },
   template: `
-    <Header 
-      @open-signup="showSignupForm = true"
-      @open-signin="showSigninForm = true"
-      @open-profile="showProfileForm = true" />
+    <div>
+      <Header 
+        @open-signup="showSignupForm = true"
+        @open-signin="showSigninForm = true"
+        @open-profile="showProfileForm = true" />
 
-    <SignUpForm :visible="showSignupForm" @close="showSignupForm = false" />
-    <SignInForm :visible="showSigninForm" @close="showSigninForm = false" />
-    <UserProfile :visible="showProfileForm" @close="showProfileForm = false" />
-    <main>
-      <article>
-        <HeroSection />
-        <TopTenAllTimes />
-        <CelebritiesSection />
-        <ServiceSection />
-        <TopRatedMovies />
-        <TvSeries />
-        <TopTenUS />
-        <TopTenChinese />
-        <TopTenKorean />
-        <TopTenAnime />
-        <CtaSection />
-      </article>
-    </main>
-    <Footer />
-    <GoToTop />
+      <SignUpForm :visible="showSignupForm" @close="showSignupForm = false" />
+      <SignInForm :visible="showSigninForm" @close="showSigninForm = false" />
+      <UserProfile :visible="showProfileForm" @close="showProfileForm = false" />
+
+      <!-- 🌗 Dark Mode Toggle Button -->
+      <button @click="toggleDarkMode" class="toggle-btn">
+        {{ isDarkMode ? '🌙 Dark Mode' : '☀️ Light Mode' }}
+      </button>
+
+      <main>
+        <article>
+          <HeroSection />
+          <TopTenAllTimes />
+          <CelebritiesSection />
+          <ServiceSection />
+          <TopRatedMovies />
+          <TvSeries />
+          <TopTenUS />
+          <TopTenChinese />
+          <TopTenKorean />
+          <TopTenAnime />
+          <CtaSection />
+        </article>
+      </main>
+
+      <Footer />
+      <GoToTop />
+    </div>
   `
 };
+
+
 
 // Header Component
 const Header = {
@@ -48,7 +104,7 @@ const Header = {
         <div class="overlay" :class="{ active: isMenuActive }" @click="closeMenu"></div>
 
         <a href="./index.html" class="logo">
-          <img src="./assets/images/logo.svg" alt="Filmlane logo">
+          <img src="../images/logo.jpeg" alt="Filmlane logo" class="logo-img">
         </a>
 
         <div class="header-actions">
@@ -81,7 +137,8 @@ const Header = {
         <nav class="navbar" :class="{ active: isMenuActive }">
           <div class="navbar-top">
             <a href="./index.html" class="logo">
-              <img src="./assets/images/logo.svg" alt="Filmlane logo">
+              <img src="../images/logo.jpeg" alt="Filmlane logo" class="logo-img">
+
             </a>
 
             <button class="menu-close-btn" @click="closeMenu">
@@ -112,9 +169,6 @@ const Header = {
       selectedLanguage: 'en',
       languages: [
         { code: 'en', name: 'EN' },
-        { code: 'au', name: 'AU' },
-        { code: 'ar', name: 'AR' },
-        { code: 'tu', name: 'TU' }
       ],
       navItems: [
         { text: 'Home', link: '../guests/index.html' },
@@ -196,216 +250,6 @@ const HeroSection = {
   }
 };
 
-// Movie Card Component
-const MovieCard = {
-  props: {
-    movie: {
-      type: Object,
-      required: true
-    }
-  },
-  template: `
-    <div class="movie-card">
-      <a href="./movie-details.html">
-        <figure class="card-banner">
-          <img :src="movie.poster" :alt="movie.title + ' movie poster'">
-        </figure>
-      </a>
-
-      <div class="title-wrapper">
-        <a href="./movie-details.html">
-          <h3 class="card-title">{{ movie.title }}</h3>
-        </a>
-        <time :datetime="movie.year">{{ movie.year }}</time>
-      </div>
-
-      <div class="card-meta">
-        <div class="badge badge-outline">{{ movie.quality }}</div>
-
-        <div class="duration">
-          <ion-icon name="time-outline"></ion-icon>
-          <time :datetime="movie.durationISO">{{ movie.duration }}</time>
-        </div>
-
-        <div class="rating">
-          <ion-icon name="star"></ion-icon>
-          <data>{{ movie.rating }}</data>
-        </div>
-      </div>
-    </div>
-  `
-};
-
-// Section Title Component
-const SectionTitle = {
-  props: {
-    subtitle: {
-      type: String,
-      default: 'Online Streaming'
-    },
-    title: {
-      type: String,
-      required: true
-    },
-    showFilters: {
-      type: Boolean,
-      default: true
-    }
-  },
-  template: `
-    <div class="flex-wrapper">
-      <div class="title-wrapper">
-        <p class="section-subtitle">{{ subtitle }}</p>
-        <h2 class="h2 section-title">{{ title }}</h2>
-      </div>
-
-      <ul class="filter-list" v-if="showFilters">
-        <li v-for="filter in filters" :key="filter">
-          <button class="filter-btn">{{ filter }}</button>
-        </li>
-      </ul>
-    </div>
-  `,
-  data() {
-    return {
-      filters: ['Movies', 'TV Shows', 'Anime']
-    }
-  }
-};
-
-// Top Ten All Times Component
-const TopTenAllTimes = {
-  components: {
-    MovieCard,
-    SectionTitle
-  },
-  template: `
-    <section class="upcoming">
-      <div class="container">
-        <SectionTitle title="Top 10 all times" />
-        
-        <ul class="movies-list has-scrollbar">
-          <li v-for="movie in topMovies" :key="movie.id">
-            <MovieCard :movie="movie" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      topMovies: [
-        {
-          id: 1,
-          title: 'The Northman',
-          year: '2022',
-          poster: './assets/images/upcoming-1.png',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Doctor Strange in the Multiverse of Madness',
-          year: '2022',
-          poster: './assets/images/upcoming-2.png',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Memory',
-          year: '2022',
-          poster: './assets/images/upcoming-3.png',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        }
-      ]
-    }
-  }
-};
-
-// Celebrities Section Component
-const CelebritiesSection = {
-  components: {
-    MovieCard,
-    SectionTitle
-  },
-  template: `
-    <section class="upcoming">
-      <div class="container">
-        <SectionTitle title="Celebrities" />
-        
-        <ul class="movies-list has-scrollbar">
-          <li v-for="celebrity in celebrities" :key="celebrity.id">
-            <MovieCard :movie="celebrity" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      celebrities: [
-        {
-          id: 1,
-          title: 'The Northman',
-          year: '2022',
-          poster: './assets/images/upcoming-1.png',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Doctor Strange in the Multiverse of Madness',
-          year: '2022',
-          poster: './assets/images/upcoming-2.png',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Memory',
-          year: '2022',
-          poster: './assets/images/upcoming-3.png',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        }
-      ]
-    }
-  }
-};
 
 // Service Section Component
 const ServiceSection = {
@@ -463,455 +307,6 @@ const ServiceSection = {
           icon: 'videocam',
           title: 'Watch Everywhere.',
           description: 'Lorem ipsum dolor sit amet, consecetur adipiscing elit, sed do eiusmod tempor.'
-        }
-      ]
-    }
-  }
-};
-
-// Top Rated Movies Component
-const TopRatedMovies = {
-  components: {
-    MovieCard
-  },
-  template: `
-    <section class="top-rated">
-      <div class="container">
-        <p class="section-subtitle">Online Streaming</p>
-        <h2 class="h2 section-title">Top Rated Movies</h2>
-
-        <ul class="filter-list">
-          <li v-for="filter in filters" :key="filter">
-            <button class="filter-btn">{{ filter }}</button>
-          </li>
-        </ul>
-
-        <ul class="movies-list">
-          <li v-for="movie in topRatedMovies" :key="movie.id">
-            <MovieCard :movie="movie" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      filters: ['Movies', 'TV Shows', 'Documentary', 'Sports'],
-      topRatedMovies: [
-        {
-          id: 1,
-          title: 'Sonic the Hedgehog 2',
-          year: '2022',
-          poster: './assets/images/movie-1.png',
-          quality: '2K',
-          duration: '122 min',
-          durationISO: 'PT122M',
-          rating: '7.8'
-        },
-        {
-          id: 2,
-          title: 'Morbius',
-          year: '2022',
-          poster: './assets/images/movie-2.png',
-          quality: 'HD',
-          duration: '104 min',
-          durationISO: 'PT104M',
-          rating: '5.9'
-        },
-        {
-          id: 3,
-          title: 'The Adam Project',
-          year: '2022',
-          poster: './assets/images/movie-3.png',
-          quality: '4K',
-          duration: '106 min',
-          durationISO: 'PT106M',
-          rating: '7.0'
-        },
-        {
-          id: 4,
-          title: 'Free Guy',
-          year: '2021',
-          poster: './assets/images/movie-4.png',
-          quality: '4K',
-          duration: '115 min',
-          durationISO: 'PT115M',
-          rating: '7.7'
-        },
-        {
-          id: 5,
-          title: 'The Batman',
-          year: '2022',
-          poster: './assets/images/movie-5.png',
-          quality: '4K',
-          duration: '176 min',
-          durationISO: 'PT176M',
-          rating: '7.9'
-        },
-        {
-          id: 6,
-          title: 'Uncharted',
-          year: '2022',
-          poster: './assets/images/movie-6.png',
-          quality: 'HD',
-          duration: '116 min',
-          durationISO: 'PT116M',
-          rating: '7.0'
-        },
-        {
-          id: 7,
-          title: 'Death on the Nile',
-          year: '2022',
-          poster: './assets/images/movie-7.png',
-          quality: '2K',
-          duration: '127 min',
-          durationISO: 'PT127M',
-          rating: '6.5'
-        },
-        {
-          id: 8,
-          title: "The King's Man",
-          year: '2021',
-          poster: './assets/images/movie-8.png',
-          quality: 'HD',
-          duration: '131 min',
-          durationISO: 'PT131M',
-          rating: '7.0'
-        }
-      ]
-    }
-  }
-};
-
-// TV Series Component
-const TvSeries = {
-  components: {
-    MovieCard
-  },
-  template: `
-    <section class="tv-series">
-      <div class="container">
-        <p class="section-subtitle">Best TV Series</p>
-        <h2 class="h2 section-title">World Best TV Series</h2>
-
-        <ul class="movies-list">
-          <li v-for="series in tvSeries" :key="series.id">
-            <MovieCard :movie="series" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      tvSeries: [
-        {
-          id: 1,
-          title: 'Moon Knight',
-          year: '2022',
-          poster: './assets/images/series-1.png',
-          quality: '2K',
-          duration: '47 min',
-          durationISO: 'PT47M',
-          rating: '8.6'
-        },
-        {
-          id: 2,
-          title: 'Halo',
-          year: '2022',
-          poster: './assets/images/series-2.png',
-          quality: '2K',
-          duration: '59 min',
-          durationISO: 'PT59M',
-          rating: '8.8'
-        },
-        {
-          id: 3,
-          title: 'Vikings: Valhalla',
-          year: '2022',
-          poster: './assets/images/series-3.png',
-          quality: '2K',
-          duration: '51 min',
-          durationISO: 'PT51M',
-          rating: '8.3'
-        },
-        {
-          id: 4,
-          title: 'Money Heist',
-          year: '2017',
-          poster: './assets/images/series-4.png',
-          quality: '4K',
-          duration: '70 min',
-          durationISO: 'PT70M',
-          rating: '8.3'
-        }
-      ]
-    }
-  }
-};
-
-// Top Ten US Component
-const TopTenUS = {
-  components: {
-    MovieCard,
-    SectionTitle
-  },
-  template: `
-    <section class="upcoming">
-      <div class="container">
-        <SectionTitle title="Top 10 US" />
-        
-        <ul class="movies-list has-scrollbar">
-          <li v-for="movie in topUsMovies" :key="movie.id">
-            <MovieCard :movie="movie" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      topUsMovies: [
-        {
-          id: 1,
-          title: 'The Northman',
-          year: '2022',
-          poster: './assets/images/upcoming-1.png',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Doctor Strange in the Multiverse of Madness',
-          year: '2022',
-          poster: './assets/images/upcoming-2.png',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Memory',
-          year: '2022',
-          poster: './assets/images/upcoming-3.png',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        }
-      ]
-    }
-  }
-};
-
-// Top Ten Chinese Component
-const TopTenChinese = {
-  components: {
-    MovieCard,
-    SectionTitle
-  },
-  template: `
-    <section class="upcoming">
-      <div class="container">
-        <SectionTitle title="Top 10 Chinese" />
-        
-        <ul class="movies-list has-scrollbar">
-          <li v-for="movie in topChineseMovies" :key="movie.id">
-            <MovieCard :movie="movie" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      topChineseMovies: [
-        {
-          id: 1,
-          title: 'The Northman',
-          year: '2022',
-          poster: './assets/images/upcoming-1.png',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Doctor Strange in the Multiverse of Madness',
-          year: '2022',
-          poster: './assets/images/upcoming-2.png',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Memory',
-          year: '2022',
-          poster: './assets/images/upcoming-3.png',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        }
-      ]
-    }
-  }
-};
-
-// Top Ten Korean Component
-const TopTenKorean = {
-  components: {
-    MovieCard,
-    SectionTitle
-  },
-  template: `
-    <section class="upcoming">
-      <div class="container">
-        <SectionTitle title="Top 10 Korean" />
-        
-        <ul class="movies-list has-scrollbar">
-          <li v-for="movie in topKoreanMovies" :key="movie.id">
-            <MovieCard :movie="movie" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      topKoreanMovies: [
-        {
-          id: 1,
-          title: 'The Northman',
-          year: '2022',
-          poster: './assets/images/upcoming-1.png',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Doctor Strange in the Multiverse of Madness',
-          year: '2022',
-          poster: './assets/images/upcoming-2.png',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Memory',
-          year: '2022',
-          poster: './assets/images/upcoming-3.png',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        }
-      ]
-    }
-  }
-};
-
-// Top Ten Anime Component
-const TopTenAnime = {
-  components: {
-    MovieCard,
-    SectionTitle
-  },
-  template: `
-    <section class="upcoming">
-      <div class="container">
-        <SectionTitle title="Top 10 Anime all times" />
-        
-        <ul class="movies-list has-scrollbar">
-          <li v-for="anime in topAnime" :key="anime.id">
-            <MovieCard :movie="anime" />
-          </li>
-        </ul>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      topAnime: [
-        {
-          id: 1,
-          title: 'Demon Slayer',
-          year: '2022',
-          poster: './assets/images/Demon Slayer.jpeg',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Akame ga Kill',
-          year: '2022',
-          poster: './assets/images/Akame ga Kill!.jpeg',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Black clover',
-          year: '2022',
-          poster: './assets/images/jpeg',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'Hunter x hunter',
-          year: '2022',
-          poster: './assets/images/𝐇𝐮𝐧𝐭𝐞𝐫 𝐩𝐨𝐬𝐭𝐞𝐫.jpeg',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
         }
       ]
     }
