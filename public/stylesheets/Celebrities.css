@@ -1,0 +1,79 @@
+/* Celebrities Section Base */
+.upcoming {
+  padding: 2rem 0;
+  background-color: #f9f9f9;
+  color: #222;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.dark .upcoming {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+}
+
+/* Container styling (optional refinement) */
+.upcoming .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Slider Wrapper */
+.slider-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scrollable list */
+.has-scrollbar {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 1rem 0;
+  gap: 1.2rem;
+}
+
+/* Hide scrollbar (cross-browser) */
+.has-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.has-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Slider buttons */
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #ffffffcc;
+  color: #000;
+  border: none;
+  padding: 0.6rem;
+  font-size: 1.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  z-index: 10;
+}
+
+.slider-btn.left {
+  left: 0.5rem;
+}
+
+.slider-btn.right {
+  right: 0.5rem;
+}
+
+/* Dark mode buttons */
+.dark .slider-btn {
+  background-color: #333333cc;
+  color: #ffffff;
+}
+
+/* Movie item spacing */
+.movie-item {
+  flex: 0 0 auto;
+  width: 200px;
+}

@@ -43,7 +43,7 @@ export const UserProfile = {
       // Simulate an API call
       console.log('Updated data:', this.form);
 
-      alert('Thông tin đã được cập nhật (giả lập)');
+      alert('Profile updated successfully!');
     }
   },
   mounted() {
