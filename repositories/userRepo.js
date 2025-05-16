@@ -6,9 +6,8 @@ const bcrypt = require('bcrypt');
 
 const SALT_ROUNDS = 10;
 
-// ---------------------------------------------------------------------------
 // BASIC CRUD HELPERS
-// ---------------------------------------------------------------------------
+
 
 async function findById(id) {
   const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
