@@ -10,9 +10,14 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const UserRepo = require('./repositories/userRepo.js'); // Import user repository
 
+// In-memory rating caches (until DB layer wired)
+const movieRatings = {};
+const userVotes = {};
+
 dotenv.config();
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var authRouter = require('./routes/auth');
 
 var app = express();
 
@@ -29,6 +34,7 @@ app.use(express.static('public'));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/api', authRouter);
 
 app.use(
   session({
@@ -128,9 +134,9 @@ app.get("/api/user", (req, res) => {
   if (!req.user) return res.status(401).json({ user: null });
 
   const user = {
-    displayName: req.user.displayName,
-    email: req.user.emails?.[0]?.value,
-    photo: req.user.photos?.[0]?.value, 
+    displayName: req.user.displayName || req.user.username,
+    email: req.user.email || (req.user.emails?.[0]?.value),
+    photo: req.user.profile_image_url || (req.user.photos?.[0]?.value),
   };
   res.json({ user });
 });
