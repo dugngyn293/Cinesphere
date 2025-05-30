@@ -17,7 +17,7 @@ const userVotes = {};
 dotenv.config();
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var authRouter = require('./routes/auth');
+// var authRouter = require('./routes/auth');
 
 var app = express();
 
@@ -34,7 +34,7 @@ app.use(express.static('public'));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/api', authRouter);
+// app.use('/api', authRouter);
 
 app.use(
   session({
@@ -46,6 +46,10 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+const PORT = 8080;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 passport.use(
   new GoogleStrategy(
