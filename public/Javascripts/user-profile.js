@@ -1,6 +1,6 @@
 export const UserProfile = {
   props: ['visible'],
-  emits: ['close'],
+  emits: ['close', 'profile-updated'],
   template: `
     <div v-if="visible" class="profile-wrapper">
       <div class="overlay" @click="$emit('close')"></div>
@@ -34,7 +34,6 @@ export const UserProfile = {
         <button class="logout-button" style="margin-top: 1rem;" @click="activeView = 'settings'">← Back to Settings</button>
         <button class="btn-close" @click="closeToHome">X</button>
       </div>
-
     </div>
   `,
   data() {
@@ -70,13 +69,22 @@ export const UserProfile = {
         avatarUrl: this.avatarPreviewUrl || this.currentAvatarUrl
       };
 
-
       localStorage.setItem('userProfile', JSON.stringify(profileData));
 
       this.currentAvatarUrl = profileData.avatarUrl;
-      alert('✅ Profile updated!');
-      this.activeView = 'settings';
 
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated!',
+        text: 'Your profile has been saved successfully.',
+        timer: 1500,
+        showConfirmButton: false,
+        position: 'top-end',
+        toast: true,
+        customClass: { container: 'custom-toast-container' }
+      });
+
+      this.activeView = 'settings';
       this.$emit('profile-updated', profileData);
     },
     goToProfile() {
@@ -94,12 +102,34 @@ export const UserProfile = {
     logout() {
       window.location.href = '/auth.html';
     },
-    removeFromPlaylist(index) {
-      if (window.confirm("Remove this movie from your playlist?")) {
+    async removeFromPlaylist(index) {
+      const result = await Swal.fire({
+        title: 'Remove Movie?',
+        text: 'Do you want to remove this movie from your playlist?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
         const updated = [...this.playlist];
         updated.splice(index, 1);
         this.playlist = updated;
         localStorage.setItem('playlist', JSON.stringify(updated));
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Removed!',
+          text: 'The movie has been removed from your playlist.',
+          timer: 1500,
+          showConfirmButton: false,
+          position: 'top-end',
+          toast: true,
+          customClass: { container: 'custom-toast-container' }
+        });
       }
     },
     syncPlaylist() {

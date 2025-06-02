@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <title>Classy Auth Form</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     * {
@@ -89,6 +90,16 @@
       margin-bottom: 15px;
     }
 
+    .remember-box a {
+      color: #ddd;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .remember-box a:hover {
+      color: #ff4b5c;
+    }
+
     .login-btn {
       background: #ff4b5c;
       color: white;
@@ -156,6 +167,92 @@
     .toggle-link a:hover {
       text-decoration: underline;
     }
+
+    /* Modal styling */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #222;
+      padding: 30px;
+      border-radius: 10px;
+      width: 300px;
+      text-align: center;
+    }
+
+    .modal-content h3 {
+      margin-bottom: 15px;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+    }
+
+    .modal-content button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close-btn {
+      background: #999;
+      color: #fff;
+    }
+
+    .submit-btn {
+      background: #ff4b5c;
+      color: #fff;
+      margin-left: 10px;
+    }
+
+    .submit-btn:hover {
+      background: #e04152;
+    }
+
+    @media (max-width: 400px) {
+      .login-box {
+        width: 90%;
+        padding: 20px;
+      }
+
+      .login-box h2 {
+        font-size: 20px;
+      }
+
+      .input-group input {
+        padding: 10px 35px 10px 35px;
+        font-size: 14px;
+      }
+
+      .login-btn,
+      .google-signin-button {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      .modal-content {
+        width: 90%;
+        padding: 20px;
+      }
+    }
   </style>
 </head>
 
@@ -165,7 +262,6 @@
       <div>
         <h2>{{ isSignUp ? 'Create Account' : 'Classy Login Form' }}</h2>
 
-        <!-- SIGN UP FORM -->
         <template v-if="isSignUp">
           <div class="input-group">
             <i class="fa fa-user"></i>
@@ -185,7 +281,6 @@
           </div>
         </template>
 
-        <!-- LOGIN FORM -->
         <template v-else>
           <div class="input-group">
             <i class="fa fa-user"></i>
@@ -200,7 +295,7 @@
 
           <div class="remember-box">
             <label><input type="checkbox" v-model="remember" /> Remember me</label>
-            <a href="#">Forgot Password?</a>
+            <a @click="openForgotPassword">Forgot Password?</a>
           </div>
 
           <button type="button" class="login-btn" @click="submitLogin">Login</button>
@@ -211,13 +306,23 @@
         </template>
       </div>
 
-      <!-- Google Sign-In (always visible) -->
       <div>
         <div class="or-divider">or</div>
         <a class="google-signin-button" href="http://localhost:8080/auth/google">
           <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" class="google-icon" />
           <span>Sign in with Google</span>
         </a>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" v-if="showForgotPassword">
+      <div class="modal-content">
+        <h3>Reset Password</h3>
+        <input v-model="resetUsername" type="text" placeholder="Username" />
+        <input v-model="newPassword" type="password" placeholder="New Password" />
+        <button class="close-btn" @click="closeForgotPassword">Cancel</button>
+        <button class="submit-btn" @click="submitForgotPassword">Submit</button>
       </div>
     </div>
   </div>
@@ -235,8 +340,60 @@
         const signupPassword = ref("");
         const showPassword = ref(false);
 
+        const showForgotPassword = ref(false);
+        const resetUsername = ref("");
+        const newPassword = ref("");
+
         const togglePassword = () => {
           showPassword.value = !showPassword.value;
+        };
+
+        const openForgotPassword = () => {
+          showForgotPassword.value = true;
+        };
+
+        const closeForgotPassword = () => {
+          showForgotPassword.value = false;
+          resetUsername.value = "";
+          newPassword.value = "";
+        };
+
+        const submitForgotPassword = async () => {
+          try {
+            const res = await fetch("http://localhost:8080/api/reset-password", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                username: resetUsername.value,
+                newPassword: newPassword.value,
+              }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Password reset successful!',
+                toast: true,
+                position: 'top-end',
+                timer: 2000,
+                showConfirmButton: false,
+              });
+              closeForgotPassword();
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Reset failed',
+                text: data.message || "Unknown error",
+              });
+            }
+          } catch (err) {
+            console.error("Error:", err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred.',
+            });
+          }
         };
 
         const submitLogin = async () => {
@@ -251,17 +408,32 @@
             });
             const data = await res.json();
             if (res.ok) {
-              alert("✅ Login successful!");
-              window.location.href = "index.html";
+              Swal.fire({
+                icon: 'success',
+                title: 'Login successful!',
+                toast: true,
+                position: 'top-end',
+                timer: 2000,
+                showConfirmButton: false,
+              }).then(() => {
+                window.location.href = "index.html";
+              });
             } else {
-              alert("❌ Login failed: " + (data.message || "Unknown error"));
+              Swal.fire({
+                icon: 'error',
+                title: 'Login failed',
+                text: data.message || "Unknown error",
+              });
             }
           } catch (err) {
             console.error("Error:", err);
-            alert("❌ An error occurred.");
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred.',
+            });
           }
         };
-
 
         const submitSignUp = async () => {
           try {
@@ -275,14 +447,30 @@
             });
             const data = await res.json();
             if (res.ok) {
-              alert("✅ Sign up successful! Please log in.");
+              Swal.fire({
+                icon: 'success',
+                title: 'Sign up successful!',
+                text: 'Please log in.',
+                toast: true,
+                position: 'top-end',
+                timer: 2000,
+                showConfirmButton: false,
+              });
               isSignUp.value = false;
             } else {
-              alert("❌ Sign up failed: " + (data.message || "Unknown error"));
+              Swal.fire({
+                icon: 'error',
+                title: 'Sign up failed',
+                text: data.message || "Unknown error",
+              });
             }
           } catch (err) {
             console.error("Error:", err);
-            alert("❌ An error occurred.");
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred.',
+            });
           }
         };
 
@@ -297,10 +485,17 @@
           togglePassword,
           submitLogin,
           submitSignUp,
+          showForgotPassword,
+          resetUsername,
+          newPassword,
+          openForgotPassword,
+          closeForgotPassword,
+          submitForgotPassword,
         };
-      }
+      },
     }).mount("#loginApp");
   </script>
+
 </body>
 
 </html>

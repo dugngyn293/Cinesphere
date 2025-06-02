@@ -106,7 +106,7 @@ body {
   color: var(--card-title-color);
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -138,22 +138,30 @@ body {
  * #RESET
 \*-----------------------------------*/
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-li { list-style: none; }
+li {
+  list-style: none;
+}
 
-a { text-decoration: none; }
+a {
+  text-decoration: none;
+}
 
 a,
 img,
 span,
 input,
 button,
-ion-icon { display: block; }
+ion-icon {
+  display: block;
+}
 
 input {
   font: inherit;
@@ -180,7 +188,9 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
-body.active { overflow: hidden; }
+body.active {
+  overflow: hidden;
+}
 
 
 /*-----------------------------------*\
@@ -202,9 +212,17 @@ body.active { overflow: hidden; }
   line-height: 1.2;
 }
 
-.h1 { font-size: var(--fs-1); }
-.h2 { font-size: var(--fs-2); }
-.h3 { font-size: var(--fs-6); }
+.h1 {
+  font-size: var(--fs-1);
+}
+
+.h2 {
+  font-size: var(--fs-2);
+}
+
+.h3 {
+  font-size: var(--fs-6);
+}
 
 .section-subtitle {
   color: var(--card-time-color);
@@ -270,22 +288,24 @@ body.active { overflow: hidden; }
   gap: 5px 10px;
 }
 
-.ganre-wrapper > a {
-  color: var(--card-meta-color); /* dynamic for light/dark */
+.ganre-wrapper>a {
+  color: var(--card-meta-color);
+  /* dynamic for light/dark */
   font-size: var(--fs-9);
   font-weight: var(--fw-500);
   transition: var(--transition-1);
 }
 
-.ganre-wrapper > a:is(:hover, :focus) {
-  color: var(--card-time-color); /* usually yellow: --citrine */
+.ganre-wrapper>a:is(:hover, :focus) {
+  color: var(--card-time-color);
+  /* usually yellow: --citrine */
 }
 
 .date-time {
   gap: 15px;
 }
 
-.date-time > div {
+.date-time>div {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -318,7 +338,7 @@ body.active { overflow: hidden; }
   background-color: var(--btn-bg);
 }
 
-.btn > ion-icon {
+.btn>ion-icon {
   font-size: 18px;
 }
 
@@ -328,7 +348,8 @@ body.active { overflow: hidden; }
 
 .btn-primary:is(:hover, :focus) {
   background: var(--btn-border);
-  color: var(--xiketic); /* dark purple tone for contrast */
+  color: var(--xiketic);
+  /* dark purple tone for contrast */
 }
 
 /**
@@ -392,7 +413,8 @@ body.active { overflow: hidden; }
 }
 
 .movie-card .card-title:is(:hover, :focus) {
-  color: var(--card-title-hover); /* likely --ffc800 */
+  color: var(--card-title-hover);
+  /* likely --ffc800 */
 }
 
 .movie-card .title-wrapper time {
@@ -450,19 +472,23 @@ body.active { overflow: hidden; }
   padding-bottom: 25px;
 }
 
-.has-scrollbar::-webkit-scrollbar { height: 8px; }
+.has-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
 
 .has-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-  box-shadow: 0 0 0 2px var(--card-time-color); /* usually yellow */
+  box-shadow: 0 0 0 2px var(--card-time-color);
+  /* usually yellow */
   border-radius: 10px;
 }
 
 .has-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--card-meta-color); /* neutral gray tone */
+  background: var(--card-meta-color);
+  /* neutral gray tone */
   border-radius: 10px;
   box-shadow: inset 0 1px 0 var(--text-color),
-              inset 0 -1px 0 var(--text-color);
+    inset 0 -1px 0 var(--text-color);
 }
 
 
@@ -491,7 +517,9 @@ body.active { overflow: hidden; }
   align-items: center;
 }
 
-.header-actions { display: none; }
+.header-actions {
+  display: none;
+}
 
 .menu-open-btn {
   color: var(--text-color);
@@ -588,7 +616,8 @@ body.active { overflow: hidden; }
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8); /* overlay đen */
+  background: rgba(0, 0, 0, 0.8);
+  /* overlay đen */
   opacity: 0;
   pointer-events: none;
   z-index: 1;
@@ -632,7 +661,7 @@ body.active { overflow: hidden; }
   color: #fff;
 }
 
-.hero-title > strong {
+.hero-title>strong {
   color: #fff;
 }
 
@@ -682,7 +711,7 @@ body.active { overflow: hidden; }
   border-color: var(--citrine);
 }
 
-.upcoming .movies-list > li {
+.upcoming .movies-list>li {
   min-width: 100%;
   scroll-snap-align: start;
 }
@@ -771,7 +800,7 @@ body.active { overflow: hidden; }
   margin-bottom: 40px;
 }
 
-.service-list > li:first-child {
+.service-list>li:first-child {
   padding-bottom: 20px;
   border-bottom: 1px dashed var(--card-meta-color);
   margin-bottom: 30px;
@@ -1031,7 +1060,7 @@ body.active { overflow: hidden; }
   margin-bottom: 15px;
 }
 
-.copyright > a {
+.copyright>a {
   display: inline-block;
   color: var(--citrine);
 }
@@ -1240,11 +1269,11 @@ body.active { overflow: hidden; }
     margin-top: 20px;
   }
 
-  .upcoming .movies-list > li {
+  .upcoming .movies-list>li {
     min-width: calc(50% - 15px);
   }
 
-  .service-list > li:first-child {
+  .service-list>li:first-child {
     padding-bottom: 30px;
   }
 
@@ -1295,20 +1324,20 @@ body.active { overflow: hidden; }
     display: none;
   }
 
-.search-btn {
-  position: relative;
-  color: #fff;
-}
+  .search-btn {
+    position: relative;
+    color: #fff;
+  }
 
-.search-btn::after {
-  content: "";
-  position: absolute;
-  top: 1px;
-  right: -20px;
-  background: #fff;
-  width: 2px;
-  height: 14px;
-}
+  .search-btn::after {
+    content: "";
+    position: absolute;
+    top: 1px;
+    right: -20px;
+    background: #fff;
+    width: 2px;
+    height: 14px;
+  }
 
 
   .lang-wrapper label {
@@ -1317,12 +1346,12 @@ body.active { overflow: hidden; }
   }
 
   .lang-wrapper select {
-  color: #fff;
-  font-size: var(--fs-9);
-  font-weight: var(--fw-700);
-  background-color: transparent;
-  border: 1px solid #fff;
-}
+    color: #fff;
+    font-size: var(--fs-9);
+    font-weight: var(--fw-700);
+    background-color: transparent;
+    border: 1px solid #fff;
+  }
 
   .lang-wrapper option {
     color: var(--bg-color);
@@ -1458,7 +1487,7 @@ body.active { overflow: hidden; }
     margin-bottom: 0;
   }
 
-  .upcoming .movies-list > li {
+  .upcoming .movies-list>li {
     min-width: calc(33.33% - 20px);
   }
 
@@ -1541,6 +1570,7 @@ body.active { overflow: hidden; }
 \*-----------------------------------*/
 
 @media (min-width: 1320px) {
+
   /**
    * REUSED STYLE
    */
@@ -1577,7 +1607,7 @@ body.active { overflow: hidden; }
   /**
    * UPCOMING
    */
-  .upcoming .movies-list > li {
+  .upcoming .movies-list>li {
     min-width: calc(25% - 22.5px);
   }
 
@@ -1596,255 +1626,272 @@ body.active { overflow: hidden; }
   .service-title {
     max-width: 480px;
   }
-/*-----------------------------------*\
+
+  /*-----------------------------------*\
  * #TOP 10 ALL TIMES SLIDER
 \*-----------------------------------*/
 
-.slider-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
+  .slider-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
 
-.slider-btn {
-  position: absolute;
-  z-index: 10;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 42px;
-  height: 60px;
-  background-color: rgba(0, 0, 0, 0.2); /* fallback if no variable */
-  background-color: var(--slider-bg, rgba(0, 0, 0, 0.2));
-  border: 1px solid rgba(255, 255, 255, 0.08); /* consider custom var if needed */
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-}
+  .slider-btn {
+    position: absolute;
+    z-index: 10;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.2);
+    /* fallback if no variable */
+    background-color: var(--slider-bg, rgba(0, 0, 0, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    /* consider custom var if needed */
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  }
 
-.slider-btn:hover {
-  background-color: rgba(0, 0, 0, 0.4); /* hover intensity */
-}
+  .slider-btn:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+    /* hover intensity */
+  }
 
-.slider-btn.left {
-  left: 0;
-}
+  .slider-btn.left {
+    left: 0;
+  }
 
-.slider-btn.right {
-  right: 0;
-}
+  .slider-btn.right {
+    right: 0;
+  }
 
-.slider-btn ion-icon {
-  font-size: 24px;
-  color: var(--citrine);
-}
+  .slider-btn ion-icon {
+    font-size: 24px;
+    color: var(--citrine);
+  }
 
 
-/*****
+  /*****
   movie card and add to playlist features
   *****/
   .star-rating {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
-  gap: 4px; /* space between stars */
-  font-size: 1.3rem;
-  color: #888;
-  cursor: pointer;
-}
-
-.star-rating span {
-  transition: color 0.2s;
-}
-
-.star-rating .filled {
-  color: gold;
-}
-
-
-.add-playlist-btn {
-  margin-top: 10px;
-  padding: 8px 12px;
-  width: 100%;
-  border: none;
-  border-radius: 6px;
-  background-color: #ff3366;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.add-playlist-btn:hover {
-  background-color: #e02e5c;
-}
-
-.playlist-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 1rem;
-  text-align: left;
-  color: white;
-}
-
-.playlist-list li {
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-/**** footer logo */
-.footer-logo {
-  height: 40px;
-  object-fit: contain;
-}
-.star-rating {
-  margin: 0.5rem 0;
-}
-.star-rating span {
-  cursor: pointer;
-  font-size: 1.5rem;
-  color: gray;
-}
-.star-rating .filled {
-  color: gold;
-}
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
-.welcome-msg {
-  color: white;
-  margin-left: 8px;
-  font-weight: 500;
-}
-
-.settings-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-
-
-/* responsive */
-@media (max-width: 480px) {
-  html {
-    font-size: 14px;
-  }
-
-  .container {
-    padding-inline: 10px;
-  }
-
-  .profile-box {
-    width: 90%;
-    padding: 1rem;
-    border-radius: 14px;
-  }
-
-  .profile-box h2 {
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
-  }
-
-  .avatar-preview {
-    width: 80px;
-    height: 80px;
-    border: 3px solid #fff;
-    margin-bottom: 1rem;
-  }
-
-  .btn-close {
-    top: 8px;
-    right: 12px;
-    font-size: 1.2rem;
-  }
-
-  .profile-menu li {
-    padding: 10px;
-    font-size: 0.95rem;
-    border-radius: 10px;
-  }
-
-  .logout-button {
-    padding: 10px;
-    font-size: 0.95rem;
-    border-radius: 10px;
-  }
-
-  .profile-box input[type="text"],
-  .profile-box input[type="email"],
-  .profile-box input[type="file"] {
-    padding: 10px;
-    font-size: 0.95rem;
-    border-radius: 8px;
-  }
-
-  .scrollable-playlist {
-    max-height: 200px;
-    padding-right: 4px;
-  }
-
-  .scrollable-playlist li {
-    font-size: 0.9rem;
-  }
-
-  .remove-btn {
-    font-size: 0.9rem;
-  }
-
-  .card {
-    padding: 0.75rem;
-  }
-
-  .movie-card .title-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
     gap: 4px;
+    /* space between stars */
+    font-size: 1.3rem;
+    color: #888;
+    cursor: pointer;
   }
 
-  .hero {
-    min-height: 650px;
-    padding-block: 60px;
+  .star-rating span {
+    transition: color 0.2s;
   }
 
-  .hero-content {
-    margin-top: 30px;
+  .star-rating .filled {
+    color: gold;
   }
 
-  .h1 {
-    font-size: 1.8rem;
+
+  .add-playlist-btn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    width: 100%;
+    border: none;
+    border-radius: 6px;
+    background-color: #ff3366;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
   }
 
-  .h2 {
+  .add-playlist-btn:hover {
+    background-color: #e02e5c;
+  }
+
+  .playlist-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+    text-align: left;
+    color: white;
+  }
+
+  .playlist-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /**** footer logo */
+  .footer-logo {
+    height: 40px;
+    object-fit: contain;
+  }
+
+  .star-rating {
+    margin: 0.5rem 0;
+  }
+
+  .star-rating span {
+    cursor: pointer;
     font-size: 1.5rem;
+    color: gray;
   }
 
-  .btn {
-    padding: 12px 20px;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
+  .star-rating .filled {
+    color: gold;
   }
 
-  .navbar-link {
-    font-size: 1rem;
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
   }
 
-  .cta .email-field {
-    padding: 14px 18px;
-    font-size: 0.9rem;
+  .welcome-msg {
+    color: white;
+    margin-left: 8px;
+    font-weight: 500;
   }
 
-  .cta-form-btn {
-    font-size: 0.9rem;
-    padding: 12px 20px;
+  .settings-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
   }
-}
+
+  /* pop up*/
+  .swal2-container.custom-toast-position {
+    top: 80px !important;
+    right: 1em !important;
+  }
+
+
+
+
+  /* responsive */
+  @media (max-width: 480px) {
+    html {
+      font-size: 14px;
+    }
+
+    .container {
+      padding-inline: 10px;
+    }
+
+    .profile-box {
+      width: 90%;
+      padding: 1rem;
+      border-radius: 14px;
+    }
+
+    .profile-box h2 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .avatar-preview {
+      width: 80px;
+      height: 80px;
+      border: 3px solid #fff;
+      margin-bottom: 1rem;
+    }
+
+    .btn-close {
+      top: 8px;
+      right: 12px;
+      font-size: 1.2rem;
+    }
+
+    .profile-menu li {
+      padding: 10px;
+      font-size: 0.95rem;
+      border-radius: 10px;
+    }
+
+    .logout-button {
+      padding: 10px;
+      font-size: 0.95rem;
+      border-radius: 10px;
+    }
+
+    .profile-box input[type="text"],
+    .profile-box input[type="email"],
+    .profile-box input[type="file"] {
+      padding: 10px;
+      font-size: 0.95rem;
+      border-radius: 8px;
+    }
+
+    .scrollable-playlist {
+      max-height: 200px;
+      padding-right: 4px;
+    }
+
+    .scrollable-playlist li {
+      font-size: 0.9rem;
+    }
+
+    .remove-btn {
+      font-size: 0.9rem;
+    }
+
+    .card {
+      padding: 0.75rem;
+    }
+
+    .movie-card .title-wrapper {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .hero {
+      min-height: 650px;
+      padding-block: 60px;
+    }
+
+    .hero-content {
+      margin-top: 30px;
+    }
+
+    .h1 {
+      font-size: 1.8rem;
+    }
+
+    .h2 {
+      font-size: 1.5rem;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+
+    .navbar-link {
+      font-size: 1rem;
+    }
+
+    .cta .email-field {
+      padding: 14px 18px;
+      font-size: 0.9rem;
+    }
+
+    .cta-form-btn {
+      font-size: 0.9rem;
+      padding: 12px 20px;
+    }
+  }
 }

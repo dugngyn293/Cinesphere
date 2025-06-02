@@ -33,7 +33,6 @@ export const MovieCard = {
         </div>
       </div>
 
-      <!-- ⭐ Star Rating -->
       <div class="star-rating">
         <span
           v-for="star in 5"
@@ -43,7 +42,6 @@ export const MovieCard = {
         >★</span>
       </div>
 
-      <!-- ➕ Add to Playlist -->
       <button class="add-playlist-btn" @click="addToPlaylist(movie)">
         ➕ Add to Playlist
       </button>
@@ -72,14 +70,14 @@ export const MovieCard = {
 
       localStorage.setItem('ratedMovies', JSON.stringify(updated));
 
-      alert(`✅ You rated "${this.movie.title}" with ${star} star(s)!`);
+      this.showToast('success', 'Rating Saved!', `You rated "${this.movie.title}" with ${star} star(s)!`);
     },
     addToPlaylist(movie) {
       const playlist = JSON.parse(localStorage.getItem('playlist')) || [];
 
       const exists = playlist.some((item) => item.id === movie.id);
       if (exists) {
-        alert(`"${movie.title}" is already in your playlist.`);
+        this.showToast('info', 'Already in Playlist', `"${movie.title}" is already in your playlist.`);
         return;
       }
 
@@ -92,7 +90,21 @@ export const MovieCard = {
       });
 
       localStorage.setItem('playlist', JSON.stringify(playlist));
-      alert(`Added "${movie.title}" to your playlist!`);
+      this.showToast('success', 'Added!', `"${movie.title}" added to your playlist!`);
+    },
+    showToast(icon, title, text) {
+      Swal.fire({
+        icon: icon,
+        title: title,
+        text: text,
+        timer: 1500,
+        showConfirmButton: false,
+        position: 'top-end',
+        toast: true,
+        customClass: {
+          popup: 'custom-toast-position'
+        }
+      });
     }
   }
 };

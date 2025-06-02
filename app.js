@@ -11,6 +11,7 @@ var logger = require('morgan');
 const UserRepo = require('./repositories/userRepo.js'); // Import user repository
 const bcrypt = require('bcrypt');
 const adminRoutes = require('./routes/adminRoutes');
+const adminRepo = require('./repositories/admin.js');
 
 // In-memory rating caches (until DB layer wired)
 const movieRatings = {};
@@ -34,7 +35,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static('public'));
 
-app.use('/', adminRoutes);
+
+app.use('/admin', adminRoutes);
 app.use('/users', usersRouter);
 // app.use('/api', authRouter);
 
@@ -290,6 +292,28 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Server error during login.' });
   }
 });
+
+app.post('/api/reset-password', async (req, res) => {
+  const { username, newPassword } = req.body;
+
+  if (!username || !newPassword) {
+    return res.status(400).json({ message: 'Missing username or new password' });
+  }
+
+  try {
+    const success = await adminRepo.updatePasswordByUsername(username, newPassword);
+
+    if (success) {
+      res.json({ message: 'Password updated successfully' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (err) {
+    console.error('Error updating password:', err);
+    res.status(500).json({ message: 'Server error while updating password' });
+  }
+});
+
 
 
 

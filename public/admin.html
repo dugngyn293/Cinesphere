@@ -4,44 +4,53 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin - User Information</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background-color: #f9f9f9;
+            background-color: #121212;
+            color: #f0f0f0;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            overflow-x: auto;
         }
 
         th,
         td {
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #333;
             text-align: center;
         }
 
         th {
-            background-color: #f1f1f1;
+            background-color: #1e1e1e;
         }
 
         input[type="search"] {
-            margin-bottom: 10px;
-            padding: 5px;
-            width: 200px;
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+            border: none;
+            border-radius: 4px;
         }
 
         h2 {
             margin-top: 40px;
+            color: #ffffff;
         }
 
         button.logout-btn {
@@ -56,45 +65,91 @@
         button.logout-btn:hover {
             background-color: #d32f2f;
         }
+
+        button.action-btn {
+            padding: 8px 16px;
+            background-color: #f44336;
+            /* red (for delete) */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button.action-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        button.reset-btn {
+            padding: 8px 16px;
+            background-color: #2196f3;
+            /* blue */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button.reset-btn:hover {
+            background-color: #1976d2;
+        }
+
+        @media (max-width: 600px) {
+
+            th,
+            td {
+                font-size: 12px;
+                padding: 6px;
+            }
+
+            h1,
+            h2 {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 
 <body>
 
     <div class="header">
-        <h1>User Management</h1>
+        <h1>ADMIN</h1>
         <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
-    <input type="search" id="searchUser" placeholder="find user...">
+    <input type="search" id="searchUser" placeholder="Find user...">
 
     <h2>Google Sign-In Users</h2>
-    <table id="googleUserTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Created At</th>
-                <th>Email</th>
-                <th>Reset Password</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div style="overflow-x: auto;">
+        <table id="googleUserTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Created At</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
     <h2>Username Sign-In Users</h2>
-    <table id="usernameUserTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Created At</th>
-                <th>Reset Password</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div style="overflow-x: auto;">
+        <table id="usernameUserTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
     <script>
         async function fetchUsers() {
@@ -115,6 +170,11 @@
                 users.forEach((user) => {
                     const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : '(no date)';
 
+                    const actions = `
+                        <button class="reset-btn" onclick="resetPassword('${user.id}')">Reset</button>
+                        <button class="action-btn" onclick="deleteUser('${user.id}')">Delete</button>
+                    `;
+
                     if (user.google_id) {
                         googleCount++;
                         const tr = document.createElement('tr');
@@ -124,7 +184,7 @@
                             <td>********</td>
                             <td>${createdAt}</td>
                             <td>${user.email}</td>
-                            <td><button onclick="resetPassword('${user.id}')">Reset</button></td>
+                            <td>${actions}</td>
                         `;
                         googleTbody.appendChild(tr);
                     } else {
@@ -135,7 +195,7 @@
                             <td>${user.username}</td>
                             <td>********</td>
                             <td>${createdAt}</td>
-                            <td><button onclick="resetPassword('${user.id}')">Reset</button></td>
+                            <td>${actions}</td>
                         `;
                         usernameTbody.appendChild(tr);
                     }
@@ -148,16 +208,105 @@
         }
 
         function resetPassword(userId) {
-            fetch(`/admin/reset-password/${userId}`, { method: 'POST' })
-                .then(res => res.json())
-                .then(data => alert(data.message))
-                .catch(err => alert('Error resetting password'));
+            Swal.fire({
+                title: '🔒 Reset User Password',
+                html: `
+            <input type="password" id="newPassword" class="swal2-input" placeholder="New password (any format)">
+        `,
+                showCancelButton: true,
+                confirmButtonText: 'Save',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const newPassword = Swal.getPopup().querySelector('#newPassword').value;
+                    if (!newPassword) {
+                        Swal.showValidationMessage('Password cannot be empty!');
+                        return false;
+                    }
+                    return fetch(`/admin/reset-password/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newPassword: newPassword })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.success) {
+                                throw new Error(data.message || 'Failed to reset password.');
+                            }
+                            return data;
+                        })
+                        .catch(err => {
+                            Swal.showValidationMessage(`Request failed: ${err}`);
+                        });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '✅ Password Updated',
+                        text: result.value.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        position: 'top-end',
+                        toast: true
+                    });
+                }
+            });
+        }
+
+
+
+        function deleteUser(userId) {
+            Swal.fire({
+                title: '⚠️ Are you sure?',
+                text: 'This action cannot be undone. Do you really want to delete this user?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/delete-user/${userId}`, { method: 'DELETE' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: 'User successfully deleted from MySQL.',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                    position: 'top-end',
+                                    toast: true
+                                });
+                                fetchUsers();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Failed',
+                                    text: 'Failed to delete user: ' + data.message
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error deleting user.'
+                            });
+                        });
+                }
+            });
         }
 
 
         function logout() {
             window.location.href = 'index.html';
         }
+
         document.getElementById('searchUser').addEventListener('input', function () {
             const searchValue = this.value.toLowerCase();
             const allRows = document.querySelectorAll('tbody tr');
