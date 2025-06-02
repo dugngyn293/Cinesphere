@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.3
+    container_name: cinesphere-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: cinesphere
+      MYSQL_USER: cinesphere_user
+      MYSQL_PASSWORD: userpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  web:
+    build: .
+    container_name: cinesphere-app
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - GOOGLE_CLIENT_ID=your_google_client_id
+      - GOOGLE_CLIENT_SECRET=your_google_client_secret
+      - SESSION_SECRET=your_session_secret
+      - TMDB_API_KEY=your_tmdb_key
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: node ./bin/www
+
+volumes:
+  db_data:

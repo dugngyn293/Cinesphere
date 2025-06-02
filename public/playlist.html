@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Playlist</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0f0f0f;
+      color: white;
+      padding: 2rem 1rem;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1.8rem;
+    }
+
+    .playlist-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .movie-card {
+      background: #1c1c2b;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 160px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+      transition: transform 0.2s;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.05);
+    }
+
+    .movie-card img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .movie-card h3 {
+      font-size: 1rem;
+      margin: 0.4rem 0;
+    }
+
+    .movie-card p {
+      margin: 0.2rem 0;
+      font-size: 0.85rem;
+    }
+
+    .remove-btn {
+      margin-top: 0.5rem;
+      background: crimson;
+      border: none;
+      color: white;
+      padding: 0.4rem 0.6rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .back-btn {
+      margin-top: 2rem;
+      padding: 0.7rem 1.5rem;
+      background: #3a3a3a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ✅ Responsive adjustments */
+    @media (max-width: 480px) {
+      body {
+        padding: 1.5rem 1rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .movie-card {
+        width: 100%;
+        max-width: 280px;
+      }
+
+      .movie-card h3 {
+        font-size: 1.05rem;
+      }
+
+      .remove-btn {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="playlistApp">
+    <h1>Your Playlist</h1>
+    <div class="playlist-grid">
+      <movie-card v-for="(movie, index) in playlist" :key="movie.id" :movie="movie" @remove="removeMovie(index)" />
+    </div>
+    <button type="button" class="back-btn" onclick="window.location.href = '/index.html#openProfile'">
+      ← Back to Settings
+    </button>
+  </div>
+
+  <script type="module">
+    import { createApp } from 'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.esm-browser.js';
+
+    const MovieCard = {
+      props: ['movie'],
+      emits: ['remove'],
+      template: `
+        <div class="movie-card">
+          <img :src="movie.poster || 'https://via.placeholder.com/180x270?text=No+Image'" :alt="movie.title" />
+          <h3>{{ movie.title }}</h3>
+          <p>{{ movie.year }}</p>
+          <p>⭐ {{ movie.rating }}</p>
+          <button class="remove-btn" @click="$emit('remove')">❌ Remove</button>
+        </div>
+      `
+    };
+
+    createApp({
+      components: { MovieCard },
+      data() {
+        return {
+          playlist: []
+        };
+      },
+      methods: {
+        removeMovie(index) {
+          this.playlist.splice(index, 1);
+          localStorage.setItem('playlist', JSON.stringify(this.playlist));
+        }
+      },
+      mounted() {
+        const stored = localStorage.getItem('playlist');
+        this.playlist = stored ? JSON.parse(stored) : [];
+      }
+    }).mount('#playlistApp');
+  </script>
+</body>
+
+</html>
