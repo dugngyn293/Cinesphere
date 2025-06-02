@@ -16,7 +16,6 @@
             justify-content: space-between;
             align-items: center;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -60,10 +59,13 @@
 </head>
 
 <body>
+
     <div class="header">
         <h1>User Management</h1>
         <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
+
+    <h1>User Management</h1>
     <input type="search" id="searchUser" placeholder="find user...">
 
     <h2>Google Sign-In Users</h2>
@@ -153,10 +155,10 @@
                 .catch(err => alert('Error resetting password'));
         }
 
+
         function logout() {
             window.location.href = 'index.html';
         }
-
         document.getElementById('searchUser').addEventListener('input', function () {
             const searchValue = this.value.toLowerCase();
             const allRows = document.querySelectorAll('tbody tr');
