@@ -4,6 +4,7 @@ import { createApp } from 'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.esm-brows
 //import { SignInForm } from './sign-in.js';
 import { UserProfile } from './user-profile.js';
 import { MovieCard } from './MovieCard.js';
+import { SearchResultItem } from './SearchResultItem.js';
 import { SectionTitle } from './SectionTitle.js';
 import { TopTenAllTimes } from './top-10-all.js';
 import { CelebritiesSection } from './CelebritiesSection.js';
@@ -18,6 +19,7 @@ const App = {
   components: {
     UserProfile,
     MovieCard,
+    SearchResultItem,
     SectionTitle,
     TopTenAllTimes,
     CelebritiesSection,
@@ -72,7 +74,7 @@ const App = {
         document.documentElement.classList.remove('dark');
       }
     },
-    async executeSearch(query) { // New: Handles the actual search fetch and state updates
+    async executeSearch(query) {
       if (!query || !query.trim()) {
         this.resetSearchState();
         return;
@@ -89,7 +91,23 @@ const App = {
           throw new Error(`Search failed: ${response.status} - ${errorText || 'Server error'}`);
         }
         const data = await response.json();
-        this.searchResults = data.results || [];
+        
+        this.searchResults = (data.results || []).map(tmdbMovie => ({
+          id: tmdbMovie.id,
+          title: tmdbMovie.title,
+          poster: tmdbMovie.poster_path 
+            ? `https://image.tmdb.org/t/p/w154${tmdbMovie.poster_path}` // Smaller poster for list view w92, w154, w185
+            : '../images/default_poster.jpeg', // Using local default poster
+          year: tmdbMovie.release_date ? tmdbMovie.release_date.substring(0, 4) : 'N/A',
+          rating: tmdbMovie.vote_average ? tmdbMovie.vote_average.toFixed(1) : 'N/A',
+          overview: tmdbMovie.overview,
+          quality: 'HD', 
+          duration: 'N/A', 
+          durationISO: 'PT0M',
+          vote_average: tmdbMovie.vote_average, 
+          release_date: tmdbMovie.release_date 
+        }));
+
       } catch (err) {
         console.error("Execute Search Error:", err);
         this.searchError = err.message || "Failed to fetch search results.";
@@ -98,11 +116,16 @@ const App = {
         this.isLoadingSearch = false;
       }
     },
-    resetSearchState() { // Renamed and used to clear search and return to home view
+    resetSearchState() {
         this.isShowingSearchResults = false;
         this.searchResults = [];
         this.searchError = null;
         this.isLoadingSearch = false;
+    },
+    navigateToMovieDetail(movieId) {
+      if (movieId) {
+        window.location.href = `./MovieDetail.html?id=${movieId}`;
+      }
     }
   },
   template: `
@@ -131,16 +154,22 @@ const App = {
         <div v-if="isShowingSearchResults" class="search-results-section container">
           <div class="search-results-header">
             <h2>Search Results</h2>
-            <button @click="resetSearchState" class="btn btn-secondary" style="margin-bottom: 20px;">Close Search</button>
+            <button @click="resetSearchState" class="btn btn-secondary btn-close-search">Close</button>
           </div>
+          
           <div v-if="isLoadingSearch" class="loading-message">
             <p>Loading results...</p>
           </div>
           <div v-else-if="searchError" class="error-message">
             <p>Sorry, there was an error: {{ searchError }}</p>
           </div>
-          <div v-else-if="searchResults.length > 0" class="movies-grid">
-            <MovieCard v-for="movie in searchResults" :key="movie.id" :movie="movie" />
+          <div v-else-if="searchResults.length > 0" class="search-results-list">
+            <SearchResultItem 
+              v-for="movie in searchResults" 
+              :key="movie.id" 
+              :item="movie" 
+              @open-detail="navigateToMovieDetail"
+            />
           </div>
           <div v-else>
             <p>No results found for your query.</p>
@@ -467,6 +496,7 @@ app.component('Footer', Footer);
 app.component('GoToTop', GoToTop);
 app.component('MovieCard', MovieCard);
 app.component('SectionTitle', SectionTitle);
+app.component('SearchResultItem', SearchResultItem);
 
 // Mount the app
 app.component('UserProfile', UserProfile);
