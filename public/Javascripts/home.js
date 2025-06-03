@@ -33,7 +33,11 @@ const App = {
       showProfileForm: false,
       isDarkMode: false,
       userAvatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png', // 👈 default avatar
-      userName: ''
+      userName: '',
+      searchResults: [], // New: For storing search results
+      isShowingSearchResults: false, // New: Flag to control display of search results
+      searchError: null, // New: To store any search error messages
+      isLoadingSearch: false // New: For loading state during search
     };
   },
 
@@ -67,6 +71,38 @@ const App = {
       } else {
         document.documentElement.classList.remove('dark');
       }
+    },
+    async executeSearch(query) { // New: Handles the actual search fetch and state updates
+      if (!query || !query.trim()) {
+        this.resetSearchState();
+        return;
+      }
+      this.isShowingSearchResults = true;
+      this.isLoadingSearch = true;
+      this.searchResults = [];
+      this.searchError = null;
+
+      try {
+        const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Search failed: ${response.status} - ${errorText || 'Server error'}`);
+        }
+        const data = await response.json();
+        this.searchResults = data.results || [];
+      } catch (err) {
+        console.error("Execute Search Error:", err);
+        this.searchError = err.message || "Failed to fetch search results.";
+        this.searchResults = [];
+      } finally {
+        this.isLoadingSearch = false;
+      }
+    },
+    resetSearchState() { // Renamed and used to clear search and return to home view
+        this.isShowingSearchResults = false;
+        this.searchResults = [];
+        this.searchError = null;
+        this.isLoadingSearch = false;
     }
   },
   template: `
@@ -75,6 +111,8 @@ const App = {
         :avatar-url="userAvatarUrl"
         :user-name="userName"
         @open-profile="showProfileForm = true"
+        @search-requested="executeSearch" 
+        @navigate-home="resetSearchState"
       />
 
 
@@ -90,7 +128,25 @@ const App = {
       </button>
 
       <main>
-        <article>
+        <div v-if="isShowingSearchResults" class="search-results-section container">
+          <div class="search-results-header">
+            <h2>Search Results</h2>
+            <button @click="resetSearchState" class="btn btn-secondary" style="margin-bottom: 20px;">Close Search</button>
+          </div>
+          <div v-if="isLoadingSearch" class="loading-message">
+            <p>Loading results...</p>
+          </div>
+          <div v-else-if="searchError" class="error-message">
+            <p>Sorry, there was an error: {{ searchError }}</p>
+          </div>
+          <div v-else-if="searchResults.length > 0" class="movies-grid">
+            <MovieCard v-for="movie in searchResults" :key="movie.id" :movie="movie" />
+          </div>
+          <div v-else>
+            <p>No results found for your query.</p>
+          </div>
+        </div>
+        <article v-else>
           <HeroSection />
           <TopTenAllTimes />
           <CelebritiesSection />
@@ -115,61 +171,61 @@ const App = {
 // Header Component
 const Header = {
   props: ['avatarUrl', 'userName'],
-
+  emits: ['open-profile', 'search-requested', 'navigate-home'], // Updated emits
   template: `
     <header class="header" :class="{ active: isMenuActive }">
       <div class="container">
         <div class="overlay" :class="{ active: isMenuActive }" @click="closeMenu"></div>
 
-        <a href="./index.html" class="logo">
-          <img src="../images/logo.jpeg" alt="Filmlane logo" class="logo-img">
+        <a href="./index.html" @click.prevent="goHome" class="logo">
+          <img src="../images/logo.jpeg" alt="Cinesphere logo" class="logo-img">
         </a>
 
         <div class="header-actions">
-          <button class="search-btn">
-            <ion-icon name="search-outline"></ion-icon>
+          <button class="search-btn" @click="toggleSearch" :aria-expanded="isSearchActive.toString()" aria-label="Toggle search">
+            <ion-icon :name="isSearchActive ? 'close-outline' : 'search-outline'"></ion-icon>
           </button>
 
-          <div class="lang-wrapper">
+          <div v-if="isSearchActive" class="search-input-area">
+            <input type="search" v-model="searchQuery" @keyup.enter="handleSearchSubmit" placeholder="Search for movies..." ref="searchInput" aria-label="Search movies">
+            <button @click="handleSearchSubmit" class="search-submit-btn" aria-label="Submit search">
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
+          </div>
+
+          <div class="lang-wrapper" v-show="!isSearchActive">
             <label for="language">
               <ion-icon name="globe-outline"></ion-icon>
             </label>
-
             <select name="language" id="language" v-model="selectedLanguage">
               <option v-for="lang in languages" :key="lang.code" :value="lang.code">{{ lang.name }}</option>
             </select>
           </div>
 
-          <!-- Only show profile icon -->
-          <!-- Profile avatar and username -->
-          <div class="settings-button" @click="$emit('open-profile')">
+          <div class="settings-button" @click="$emit('open-profile')" v-show="!isSearchActive">
             <img :src="avatarUrl" class="user-avatar" />
             <span v-if="userName" class="welcome-msg">Hi, {{ userName }}</span>
           </div>
-
         </div>
 
-        <button class="menu-open-btn" @click="openMenu">
+        <button class="menu-open-btn" @click="openMenu" v-show="!isSearchActive">
           <ion-icon name="reorder-two"></ion-icon>
         </button>
 
         <nav class="navbar" :class="{ active: isMenuActive }">
           <div class="navbar-top">
-            <a href="./index.html" class="logo">
+            <a href="./index.html" @click.prevent="goHomeAndCloseMenu" class="logo">
               <img src="../images/logo.jpeg" alt="Cinesphere logo" class="logo-img">
             </a>
-
             <button class="menu-close-btn" @click="closeMenu">
               <ion-icon name="close-outline"></ion-icon>
             </button>
           </div>
-
           <ul class="navbar-list">
             <li v-for="item in navItems" :key="item.text">
-              <a :href="item.link" class="navbar-link">{{ item.text }}</a>
+              <a :href="item.link" @click.prevent="navItemClicked(item.link)" class="navbar-link">{{ item.text }}</a>
             </li>
           </ul>
-
           <ul class="navbar-social-list">
             <li v-for="social in socialMedia" :key="social.icon">
               <a :href="social.link" class="navbar-social-link">
@@ -190,15 +246,17 @@ const Header = {
         { code: 'vi', name: 'Vietnamese' }
       ],
       navItems: [
-        { text: 'Home', link: '/' },
-        { text: 'Movies', link: '/movies' },
-        { text: 'TV Series', link: '/tv' }
+        { text: 'Home', link: './index.html' }, // Assuming relative links for now
+        { text: 'Movies', link: '#movies' }, // Placeholder links
+        { text: 'TV Series', link: '#tv' }  // Placeholder links
       ],
       socialMedia: [
         { icon: 'logo-facebook', link: '#' },
         { icon: 'logo-twitter', link: '#' },
         { icon: 'logo-instagram', link: '#' }
-      ]
+      ],
+      isSearchActive: false, 
+      searchQuery: ''     
     };
   },
   methods: {
@@ -207,6 +265,45 @@ const Header = {
     },
     closeMenu() {
       this.isMenuActive = false;
+    },
+    toggleSearch() {
+      this.isSearchActive = !this.isSearchActive;
+      if (this.isSearchActive) {
+        this.$nextTick(() => {
+          if (this.$refs.searchInput) { // Check if ref exists
+             this.$refs.searchInput.focus();
+          }
+        });
+      } else {
+        // If search is closed without submitting, we might want to clear query
+        // or let App decide if results should be cleared via navigate-home logic
+        // For now, just hiding it. If user reopens, query is still there.
+      }
+    },
+    handleSearchSubmit() { // Renamed from submitSearch for clarity
+      if (!this.searchQuery.trim()) return;
+      this.$emit('search-requested', this.searchQuery);
+      // Keep search active or close it? For now, keep active to see query.
+      // To close after search: this.isSearchActive = false;
+    },
+    goHome() { 
+      this.$emit('navigate-home'); 
+      // If not using a SPA router, simple navigation might be enough,
+      // but emitting allows parent to clear state.
+      // window.location.href = './index.html'; // This would cause a full page reload
+    },
+    goHomeAndCloseMenu() {
+      this.goHome();
+      this.closeMenu();
+    },
+    navItemClicked(link) {
+      // For now, simple navigation. If using Vue Router, this would be different.
+      if (link === './index.html') {
+        this.goHome();
+      }
+      // Potentially close menu, or let default link behavior handle it
+      this.closeMenu();
+      // window.location.href = link; // Uncomment if these are actual pages for now
     }
   }
 };
