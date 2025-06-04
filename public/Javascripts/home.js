@@ -13,6 +13,7 @@ import { TopTenUS } from './TopTenUs.js';
 import { TopTenChinese } from './TopTenChinese.js';
 import { TopTenKorean } from './TopTenKorean.js';
 import { TopTenJapanese } from './TopTenJapanese.js';
+import { SearchResult } from './SearchResult.js';
 
 const App = {
   components: {
@@ -26,36 +27,49 @@ const App = {
     TopTenUS,
     TopTenChinese,
     TopTenKorean,
-    TopTenJapanese
+    TopTenJapanese,
+    SearchResult
   },
   data() {
     return {
+      query: '',
       showProfileForm: false,
       isDarkMode: false,
-      userAvatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png', // 👈 default avatar
+      userAvatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
       userName: ''
     };
   },
-
+  computed: {
+    searchQueryFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('query');
+    }
+  },
   mounted() {
     this.isDarkMode = localStorage.getItem('theme') === 'dark';
     this.applyTheme();
+
     const profile = JSON.parse(localStorage.getItem('userProfile'));
     if (profile) {
       this.userAvatarUrl = profile.avatarUrl || this.userAvatarUrl;
       this.userName = profile.name || '';
     }
+
     if (window.location.hash === '#openProfile') {
       this.showProfileForm = true;
     }
 
+
+    const currentQuery = this.searchQueryFromURL;
+    if (currentQuery) {
+      this.query = currentQuery;
+    }
   },
   methods: {
     handleProfileUpdate(profile) {
       this.userAvatarUrl = profile.avatarUrl || this.userAvatarUrl;
       this.userName = profile.name || '';
     },
-
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode;
       localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
@@ -67,6 +81,12 @@ const App = {
       } else {
         document.documentElement.classList.remove('dark');
       }
+    },
+    handleSearch() {
+      const encoded = encodeURIComponent(this.query);
+      window.history.pushState({}, '', `?query=${encoded}`);
+
+      window.dispatchEvent(new Event('popstate'));
     }
   },
   template: `
@@ -76,7 +96,6 @@ const App = {
         :user-name="userName"
         @open-profile="showProfileForm = true"
       />
-
 
       <UserProfile
         :visible="showProfileForm"
@@ -91,15 +110,25 @@ const App = {
 
       <main>
         <article>
-          <HeroSection />
-          <TopTenAllTimes />
-          <CelebritiesSection />
-          <TopRatedMovies />
-          <TvSeries />
-          <TopTenUS />
-          <TopTenChinese />
-          <TopTenKorean />
-          <TopTenJapanese />
+          <input
+            v-model="query"
+            placeholder="Enter movie name..."
+            @keyup.enter="handleSearch"
+          />
+
+          <SearchResult v-if="searchQueryFromURL" :query="searchQueryFromURL" />
+
+          <template v-else>
+            <HeroSection />
+            <TopTenAllTimes />
+            <CelebritiesSection />
+            <TopRatedMovies />
+            <TvSeries />
+            <TopTenUS />
+            <TopTenChinese />
+            <TopTenKorean />
+            <TopTenJapanese />
+          </template>
         </article>
       </main>
 
@@ -126,9 +155,20 @@ const Header = {
         </a>
 
         <div class="header-actions">
-          <button class="search-btn">
-            <ion-icon name="search-outline"></ion-icon>
-          </button>
+          <div class="search-wrapper">
+            <button class="search-btn" @click="toggleSearch">
+              <ion-icon name="search-outline"></ion-icon>
+            </button>
+            <input
+              v-show="showSearchInput"
+              v-model="searchQuery"
+              @keydown.enter="handleSearch"
+              class="search-input"
+              type="text"
+              placeholder="Search movies..."
+            />
+          </div>
+
 
           <div class="lang-wrapper">
             <label for="language">
@@ -185,6 +225,8 @@ const Header = {
     return {
       isMenuActive: false,
       selectedLanguage: 'en',
+      searchQuery: '',
+      showSearchInput: false,
       languages: [
         { code: 'en', name: 'English' },
         { code: 'vi', name: 'Vietnamese' }
@@ -201,14 +243,29 @@ const Header = {
       ]
     };
   },
+
   methods: {
     openMenu() {
       this.isMenuActive = true;
     },
     closeMenu() {
       this.isMenuActive = false;
+    },
+    toggleSearch() {
+      this.showSearchInput = !this.showSearchInput;
+      this.$nextTick(() => {
+        const input = this.$el.querySelector('.search-input');
+        if (input && this.showSearchInput) input.focus();
+      });
+    },
+    handleSearch() {
+      if (this.searchQuery.trim() !== '') {
+        const query = encodeURIComponent(this.searchQuery.trim());
+        window.location.href = `/api/search?query=${query}`;
+      }
     }
   }
+
 };
 
 // Hero Section Component
@@ -370,6 +427,7 @@ app.component('Footer', Footer);
 app.component('GoToTop', GoToTop);
 app.component('MovieCard', MovieCard);
 app.component('SectionTitle', SectionTitle);
+app.component('SearchResult', SearchResult);
 
 // Mount the app
 app.component('UserProfile', UserProfile);

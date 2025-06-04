@@ -9,7 +9,11 @@ export const MovieCard = {
   template: `
     <div class="movie-card">
       <figure class="card-banner">
-        <img :src="movie.poster" :alt="movie.title + ' movie poster'" />
+        <img
+          :src="movie.poster"
+          :alt="movie.title + ' movie poster'"
+          class="poster-img"
+        />
       </figure>
 
       <div class="title-wrapper">

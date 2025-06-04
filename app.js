@@ -32,8 +32,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static('public'));
+app.use('/static', express.static(path.join(__dirname, 'public')));
+
 
 
 app.use('/admin', adminRoutes);
@@ -50,6 +50,12 @@ app.use(
 app.use('/', adminRoutes);
 app.use(passport.initialize());
 app.use(passport.session());
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/auth.html');
+}
 passport.use(
   new GoogleStrategy(
     {
@@ -93,7 +99,7 @@ passport.use(
           // For simplicity, using displayName. Consider a strategy for username uniqueness.
           const newUser = {
             google_id: googleId,
-            email: '',
+            email: email,
             username: displayName, // Or generate a unique username
             profile_image_url: profileImageUrl,
             // Password is not set for OAuth users
@@ -147,10 +153,11 @@ app.get("/api/user", (req, res) => {
 
 
 app.get("/logout", (req, res) => {
-  req.logout(() => {
-    res.redirect("/");
+  req.session.destroy(() => {
+    res.redirect("/auth.html");
   });
 });
+
 
 
 app.get("/api/search", async (req, res) => {
@@ -273,7 +280,7 @@ app.post('/api/signup', async (req, res) => {
 });
 
 
-
+// login
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
   console.log('🔍 Login request:', identifier, password);
@@ -285,6 +292,8 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid username/email or password.' });
     }
 
+    req.session.user = user;  // Store user in session
+
     console.log('✅ Login success for user:', user.id);
     res.status(200).json({ message: 'Login successful!', userId: user.id });
   } catch (err) {
@@ -292,6 +301,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Server error during login.' });
   }
 });
+
 
 app.post('/api/reset-password', async (req, res) => {
   const { username, newPassword } = req.body;
@@ -314,12 +324,28 @@ app.post('/api/reset-password', async (req, res) => {
   }
 });
 
+// Serve public assets BEFORE wildcard route
+app.use('/stylesheets', express.static(path.join(__dirname, 'public', 'stylesheets')));
+app.use('/Javascripts', express.static(path.join(__dirname, 'public', 'Javascripts')));
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 
 
-
-app.get("*", (req, res) => {
+// Allow access to auth.html even when not logged in
+app.get("/auth.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "auth.html"));
+});
+app.get("/admin.html", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+// Protect main app routes
+app.get("/", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+app.get("*", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+
 
 
 

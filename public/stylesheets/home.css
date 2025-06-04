@@ -1777,6 +1777,21 @@ body.active {
     right: 1em !important;
   }
 
+  /* search button */
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .search-input {
+    background-color: white;
+    color: black;
+    border: 1px solid white;
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
 
 
 

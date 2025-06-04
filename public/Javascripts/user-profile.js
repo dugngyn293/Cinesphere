@@ -27,8 +27,8 @@ export const UserProfile = {
         <form @submit.prevent="updateProfile">
           <input type="file" @change="handleAvatarChange" />
           <img :src="avatarPreviewUrl || currentAvatarUrl" class="avatar-preview" />
-          <input v-model="form.name" type="text" placeholder="Your Name" />
-          <input v-model="form.email" type="email" placeholder="Your Email" />
+          <input v-model="form.name" type="text" placeholder="Your new username" />
+          <input v-model="form.email" type="email" placeholder="Your new password" />
           <button type="submit" class="logout-button">💾 Save</button>
         </form>
         <button class="logout-button" style="margin-top: 1rem;" @click="activeView = 'settings'">← Back to Settings</button>
