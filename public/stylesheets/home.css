@@ -1,4 +1,3 @@
-
 /* Default (Light Mode) */
 :root {
   /* Color Palette */
@@ -1555,6 +1554,11 @@ body.active {
     bottom: -80px;
   }
 }
+
+/* search button */
+
+
+
 
 @media (min-width: 1200px) {
   :root {

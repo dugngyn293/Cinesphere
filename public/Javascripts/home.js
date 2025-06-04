@@ -14,7 +14,7 @@ import { TopTenUS } from './TopTenUs.js';
 import { TopTenChinese } from './TopTenChinese.js';
 import { TopTenKorean } from './TopTenKorean.js';
 import { TopTenJapanese } from './TopTenJapanese.js';
-import { SearchResult } from './SearchResult.js';
+import { SearchResultItem } from './SearchResultItem.js';
 
 const App = {
   components: {
@@ -29,7 +29,7 @@ const App = {
     TopTenChinese,
     TopTenKorean,
     TopTenJapanese,
-    SearchResult
+    SearchResultItem
   },
   data() {
     return {
@@ -428,7 +428,7 @@ app.component('Footer', Footer);
 app.component('GoToTop', GoToTop);
 app.component('MovieCard', MovieCard);
 app.component('SectionTitle', SectionTitle);
-app.component('SearchResult', SearchResult);
+app.component('SearchResultItem', SearchResultItem);
 
 // Mount the app
 app.component('UserProfile', UserProfile);

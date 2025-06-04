@@ -13,6 +13,7 @@ const UserRepo = require('./repositories/userRepo.js'); // Import user repositor
 const bcrypt = require('bcrypt');
 const adminRoutes = require('./routes/adminRoutes');
 const adminRepo = require('./repositories/admin.js');
+const cors = require('cors');
 
 // In-memory rating caches (until DB layer wired)
 const movieRatings = {};
@@ -25,10 +26,13 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
