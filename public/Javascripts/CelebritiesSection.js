@@ -45,7 +45,7 @@ export const CelebritiesSection = {
       this.$refs.celebritySlider.scrollLeft += 400;
     },
     async fetchCelebrities() {
-      const apiKey = '510215c9eeaff8af2bc03a26010d9bbb'; 
+      const apiKey = '510215c9eeaff8af2bc03a26010d9bbb';
       const url = `https://api.themoviedb.org/3/person/popular?api_key=${apiKey}&language=en-US&page=1`;
 
       try {
@@ -54,7 +54,7 @@ export const CelebritiesSection = {
 
         this.celebrities = (data.results || []).slice(0, 10).map(person => ({
           id: person.id,
-          title: person.name, 
+          title: person.name,
           year: 'Known for: ' + (person.known_for_department || 'N/A'),
           poster: person.profile_path
             ? `https://image.tmdb.org/t/p/w500${person.profile_path}`
