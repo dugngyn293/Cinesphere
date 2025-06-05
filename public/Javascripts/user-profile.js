@@ -1,4 +1,3 @@
-
 export const UserProfile = {
   props: ['visible'],
   emits: ['close', 'profile-updated'],
@@ -6,34 +5,29 @@ export const UserProfile = {
     <div v-if="visible" class="profile-wrapper">
       <div class="overlay" @click="$emit('close')"></div>
 
-      <!-- 🧭 Settings View -->
       <div class="profile-box" v-if="activeView === 'settings'">
         <img :src="avatarPreviewUrl || currentAvatarUrl" class="avatar-preview" />
         <h2>Settings</h2>
-
         <ul class="profile-menu">
-          <li @click="goToProfile">👤 Profile</li>
+          <li @click="goToProfileView">👤 Profile</li>
           <li @click="goToPlaylist">🎵 Your Playlist</li>
           <li @click="goToBadge">🏆 Badge</li>
           <li @click="goToRating">⭐ Your Star Rating</li>
         </ul>
-
         <button class="logout-button" @click="logout">🚪 Log out</button>
         <button class="btn-close" @click="$emit('close')">X</button>
       </div>
 
-      <!-- 📝 Edit Profile Form -->
-      <div class="profile-box" v-else-if="activeView === 'edit'">
-        <h2>Edit Profile</h2>
-        <form @submit.prevent="updateProfile">
-          <input type="file" @change="handleAvatarChange" />
-          <img :src="avatarPreviewUrl || currentAvatarUrl" class="avatar-preview" />
-          <input v-model="form.name" type="text" placeholder="Your new username" />
-          <input v-model="form.email" type="email" placeholder="Your new password" />
-          <button type="submit" class="logout-button">💾 Save</button>
-        </form>
-        <button class="logout-button" style="margin-top: 1rem;" @click="activeView = 'settings'">← Back to Settings</button>
-        <button class="btn-close" @click="closeToHome">X</button>
+      <div class="profile-box" v-else-if="activeView === 'profile-view'">
+        <div class="profile-info">
+          <div class="info-left">
+            <button class="profile-btn" @click="goToUpdateProfile">Update profile</button>
+            <button class="profile-btn" @click="activeView = 'settings'">Back to settings</button>
+          </div>
+          <div class="info-right">
+            <img :src="avatarPreviewUrl || currentAvatarUrl" class="avatar-large avatar-preview" />
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -42,8 +36,9 @@ export const UserProfile = {
       activeView: 'settings',
       form: {
         name: '',
-        email: '',
-        avatar: null
+        password: '',
+        avatar: null,
+        id: null
       },
       currentAvatarUrl: 'https://www.w3schools.com/howto/img_avatar.png',
       avatarPreviewUrl: null,
@@ -51,45 +46,102 @@ export const UserProfile = {
     };
   },
   mounted() {
+    this.loadUserProfile();
     window.addEventListener('storage', this.syncPlaylist);
     this.syncPlaylist();
+
+    // 🔁 Nếu quay lại từ updateprofile.html
+    if (sessionStorage.getItem('goBackToProfileView')) {
+      this.activeView = 'profile-view';
+      sessionStorage.removeItem('goBackToProfileView');
+    }
   },
   beforeUnmount() {
     window.removeEventListener('storage', this.syncPlaylist);
   },
   methods: {
+    loadUserProfile() {
+      const stored = localStorage.getItem('userProfile');
+      if (stored) {
+        const data = JSON.parse(stored);
+        this.form.name = data.name || '';
+        this.form.id = data.id || null;
+        this.currentAvatarUrl = data.avatarUrl || this.currentAvatarUrl;
+      }
+    },
     handleAvatarChange(e) {
       const [file] = e.target.files;
-      this.form.avatar = file;
-      this.avatarPreviewUrl = URL.createObjectURL(this.form.avatar);
+      if (file) {
+        this.form.avatar = file;
+        this.avatarPreviewUrl = URL.createObjectURL(file);
+      }
     },
-    updateProfile() {
-      const profileData = {
-        name: this.form.name,
-        email: this.form.email,
-        avatarUrl: this.avatarPreviewUrl || this.currentAvatarUrl
-      };
+    async updateProfile() {
+      try {
+        const formData = new FormData();
+        formData.append("name", this.form.name);
+        formData.append("password", this.form.password);
+        formData.append("id", this.form.id);
+        if (this.form.avatar) {
+          formData.append("avatar", this.form.avatar);
+        }
 
-      localStorage.setItem('userProfile', JSON.stringify(profileData));
+        const res = await fetch("/api/update-profile", {
+          method: "POST",
+          body: formData
+        });
 
-      this.currentAvatarUrl = profileData.avatarUrl;
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          throw new Error("Server did not return valid JSON: " + text);
+        }
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Profile Updated!',
-        text: 'Your profile has been saved successfully.',
-        timer: 1500,
-        showConfirmButton: false,
-        position: 'top-end',
-        toast: true,
-        customClass: { container: 'custom-toast-container' }
-      });
+        if (res.ok) {
+          const updatedProfile = {
+            name: this.form.name,
+            avatarUrl: data.avatarUrl || this.currentAvatarUrl,
+            id: this.form.id
+          };
 
-      this.activeView = 'settings';
-      this.$emit('profile-updated', profileData);
+          this.currentAvatarUrl = updatedProfile.avatarUrl;
+          localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+
+          Swal.fire({
+            icon: "success",
+            title: "Profile Updated!",
+            timer: 1500,
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false
+          });
+
+          this.activeView = "profile-view";
+          this.$emit("profile-updated", updatedProfile);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Update failed",
+            text: data.message || "Unknown error"
+          });
+        }
+      } catch (err) {
+        console.error("Error updating profile:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: err.message || "Something went wrong"
+        });
+      }
     },
-    goToProfile() {
-      this.activeView = 'edit';
+    goToUpdateProfile() {
+      sessionStorage.setItem('goBackToProfileView', 'true');
+      window.location.href = '/updateprofile.html';
+    },
+    goToProfileView() {
+      this.activeView = 'profile-view';
     },
     goToPlaylist() {
       window.location.href = '/playlist.html';
@@ -101,37 +153,8 @@ export const UserProfile = {
       window.location.href = '/star.html';
     },
     logout() {
+      localStorage.removeItem('userProfile');
       window.location.href = '/auth.html';
-    },
-    async removeFromPlaylist(index) {
-      const result = await Swal.fire({
-        title: 'Remove Movie?',
-        text: 'Do you want to remove this movie from your playlist?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, remove it!',
-        cancelButtonText: 'Cancel'
-      });
-
-      if (result.isConfirmed) {
-        const updated = [...this.playlist];
-        updated.splice(index, 1);
-        this.playlist = updated;
-        localStorage.setItem('playlist', JSON.stringify(updated));
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Removed!',
-          text: 'The movie has been removed from your playlist.',
-          timer: 1500,
-          showConfirmButton: false,
-          position: 'top-end',
-          toast: true,
-          customClass: { container: 'custom-toast-container' }
-        });
-      }
     },
     syncPlaylist() {
       const stored = localStorage.getItem('playlist');

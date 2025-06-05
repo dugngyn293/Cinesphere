@@ -1,11 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Admin - User Information</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -53,44 +54,37 @@
             color: #ffffff;
         }
 
-        button.logout-btn {
+        button.logout-btn,
+        .reset-btn,
+        .action-btn {
             padding: 8px 16px;
-            background-color: #f44336;
-            color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-        }
-
-        button.logout-btn:hover {
-            background-color: #d32f2f;
-        }
-
-        button.action-btn {
-            padding: 8px 16px;
-            background-color: #f44336;
-            /* red (for delete) */
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
         }
 
-        button.action-btn:hover {
+        .logout-btn {
+            background-color: #f44336;
+        }
+
+        .logout-btn:hover {
             background-color: #d32f2f;
         }
 
-        button.reset-btn {
-            padding: 8px 16px;
+        .action-btn {
+            background-color: #f44336;
+        }
+
+        .action-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .reset-btn {
             background-color: #2196f3;
-            /* blue */
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
         }
 
-        button.reset-btn:hover {
+        .reset-btn:hover {
             background-color: #1976d2;
         }
 
@@ -111,12 +105,11 @@
 </head>
 
 <body>
-
     <div class="header">
         <h1>ADMIN</h1>
         <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
-    <input type="search" id="searchUser" placeholder="Find user...">
+    <input type="search" id="searchUser" placeholder="Find user..." />
 
     <h2>Google Sign-In Users</h2>
     <div style="overflow-x: auto;">
@@ -124,6 +117,7 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>Avatar</th>
                     <th>Username</th>
                     <th>Password</th>
                     <th>Created At</th>
@@ -141,6 +135,7 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>Avatar</th>
                     <th>Username</th>
                     <th>Password</th>
                     <th>Created At</th>
@@ -169,50 +164,45 @@
 
                 users.forEach((user) => {
                     const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : '(no date)';
-
+                    const avatarUrl = user.profile_image_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                    const avatar = `<img src="${avatarUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="avatar" />`;
                     const actions = `
-                        <button class="reset-btn" onclick="resetPassword('${user.id}')">Reset</button>
-                        <button class="action-btn" onclick="deleteUser('${user.id}')">Delete</button>
-                    `;
+            <button class="reset-btn" onclick="resetPassword('${user.id}')">Reset</button>
+            <button class="action-btn" onclick="deleteUser('${user.id}')">Delete</button>
+          `;
 
-                    if (user.google_id) {
-                        googleCount++;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${googleCount}</td>
-                            <td>${user.username}</td>
-                            <td>********</td>
-                            <td>${createdAt}</td>
-                            <td>${user.email}</td>
-                            <td>${actions}</td>
-                        `;
-                        googleTbody.appendChild(tr);
-                    } else {
-                        usernameCount++;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${usernameCount}</td>
-                            <td>${user.username}</td>
-                            <td>********</td>
-                            <td>${createdAt}</td>
-                            <td>${actions}</td>
-                        `;
-                        usernameTbody.appendChild(tr);
-                    }
+                    const rowHtml = user.google_id
+                        ? `<tr>
+                <td>${++googleCount}</td>
+                <td>${avatar}</td>
+                <td>${user.username}</td>
+                <td>********</td>
+                <td>${createdAt}</td>
+                <td>${user.email}</td>
+                <td>${actions}</td>
+              </tr>`
+                        : `<tr>
+                <td>${++usernameCount}</td>
+                <td>${avatar}</td>
+                <td>${user.username}</td>
+                <td>********</td>
+                <td>${createdAt}</td>
+                <td>${actions}</td>
+              </tr>`;
+
+                    user.google_id ? googleTbody.innerHTML += rowHtml : usernameTbody.innerHTML += rowHtml;
                 });
             } catch (err) {
                 console.error('Error:', err);
-                document.querySelector('#googleUserTable tbody').innerHTML = '<tr><td colspan="6">Error loading users.</td></tr>';
-                document.querySelector('#usernameUserTable tbody').innerHTML = '<tr><td colspan="5">Error loading users.</td></tr>';
+                document.querySelector('#googleUserTable tbody').innerHTML = '<tr><td colspan="7">Error loading users.</td></tr>';
+                document.querySelector('#usernameUserTable tbody').innerHTML = '<tr><td colspan="6">Error loading users.</td></tr>';
             }
         }
 
         function resetPassword(userId) {
             Swal.fire({
                 title: '🔒 Reset User Password',
-                html: `
-            <input type="password" id="newPassword" class="swal2-input" placeholder="New password (any format)">
-        `,
+                html: `<input type="password" id="newPassword" class="swal2-input" placeholder="New password">`,
                 showCancelButton: true,
                 confirmButtonText: 'Save',
                 cancelButtonText: 'Cancel',
@@ -226,18 +216,14 @@
                     return fetch(`/admin/reset-password/${userId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ newPassword: newPassword })
+                        body: JSON.stringify({ newPassword })
                     })
                         .then(res => res.json())
                         .then(data => {
-                            if (!data.success) {
-                                throw new Error(data.message || 'Failed to reset password.');
-                            }
+                            if (!data.success) throw new Error(data.message || 'Failed to reset password.');
                             return data;
                         })
-                        .catch(err => {
-                            Swal.showValidationMessage(`Request failed: ${err}`);
-                        });
+                        .catch(err => Swal.showValidationMessage(`Request failed: ${err}`));
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             }).then((result) => {
@@ -254,8 +240,6 @@
                 }
             });
         }
-
-
 
         function deleteUser(userId) {
             Swal.fire({
@@ -291,7 +275,7 @@
                                 });
                             }
                         })
-                        .catch(err => {
+                        .catch(() => {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
@@ -302,7 +286,6 @@
             });
         }
 
-
         function logout() {
             window.location.href = 'index.html';
         }
@@ -312,7 +295,7 @@
             const allRows = document.querySelectorAll('tbody tr');
 
             allRows.forEach(row => {
-                const username = row.children[1].textContent.toLowerCase();
+                const username = row.children[2].textContent.toLowerCase();
                 row.style.display = username.includes(searchValue) ? '' : 'none';
             });
         });

@@ -38,11 +38,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 
 
 
 app.use('/admin', adminRoutes);
 app.use('/users', usersRouter);
+app.use('/api', usersRouter);
+
 // app.use('/api', authRouter);
 
 app.use(
@@ -56,11 +60,12 @@ app.use('/', adminRoutes);
 app.use(passport.initialize());
 app.use(passport.session());
 function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated && req.isAuthenticated()) {
+  if ((req.isAuthenticated && req.isAuthenticated()) || req.session.user) {
     return next();
   }
   res.redirect('/auth.html');
 }
+
 passport.use(
   new GoogleStrategy(
     {
@@ -288,24 +293,21 @@ app.post('/api/signup', async (req, res) => {
 // login
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
-  console.log('🔍 Login request:', identifier, password);
 
   try {
     const user = await UserRepo.verifyPassword(identifier, password);
     if (!user) {
-      console.log('❌ Login failed');
-      return res.status(400).json({ message: 'Invalid username/email or password.' });
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    req.session.user = user;  // Store user in session
+    req.session.user = user; // lưu session
 
-    console.log('✅ Login success for user:', user.id);
-    res.status(200).json({ message: 'Login successful!', userId: user.id });
+    res.status(200).json({ message: 'Login successful', userId: user.id });
   } catch (err) {
-    console.error('🔥 Login error:', err);
     res.status(500).json({ message: 'Server error during login.' });
   }
 });
+
 
 
 app.post('/api/reset-password', async (req, res) => {
@@ -337,6 +339,12 @@ app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 
 
 // Allow access to auth.html even when not logged in
+app.get("/auth.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "auth.html"));
+});
+app.get("/updateprofile.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "updateprofile.html"));
+});
 app.get("/badge.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "badge.html"));
 });
@@ -350,9 +358,6 @@ app.get("/star.html", (req, res) => {
 
 app.get("/MovieDetail.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "MovieDetail.html"));
-});
-app.get("/auth.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "auth.html"));
 });
 app.get("/admin.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));

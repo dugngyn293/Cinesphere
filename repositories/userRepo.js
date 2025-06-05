@@ -72,6 +72,23 @@ async function verifyPassword(identifier, candidatePassword) {
   return ok ? user : null;
 }
 
+async function updateUserProfile(username, newPassword, avatarUrl) {
+  const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+  const [result] = await pool.query(
+    `UPDATE users
+     SET password = ?, profile_image_url = ?
+     WHERE username = ?`,
+    [hashedPassword, avatarUrl, username]
+  );
+
+  if (result.affectedRows === 0) {
+    throw new Error("User not found or not updated.");
+  }
+
+  return result;
+}
+
 module.exports = {
   findById,
   findByEmail,
@@ -79,4 +96,5 @@ module.exports = {
   findByUsername,
   create,
   verifyPassword,
+  updateUserProfile,
 };

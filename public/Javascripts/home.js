@@ -50,6 +50,11 @@ const App = {
     this.isDarkMode = localStorage.getItem('theme') === 'dark';
     this.applyTheme();
 
+    const username = localStorage.getItem('username');
+    if (username) {
+      this.userName = username;
+    }
+
     const profile = JSON.parse(localStorage.getItem('userProfile'));
     if (profile) {
       this.userAvatarUrl = profile.avatarUrl || this.userAvatarUrl;
@@ -117,7 +122,7 @@ const App = {
             @keyup.enter="handleSearch"
           />
 
-          <SearchResult v-if="searchQueryFromURL" :query="searchQueryFromURL" />
+          <SearchResultItem v-if="searchQueryFromURL" :query="searchQueryFromURL" />
 
           <template v-else>
             <HeroSection />
@@ -170,24 +175,20 @@ const Header = {
             />
           </div>
 
-
           <div class="lang-wrapper">
             <label for="language">
               <ion-icon name="globe-outline"></ion-icon>
             </label>
-
             <select name="language" id="language" v-model="selectedLanguage">
               <option v-for="lang in languages" :key="lang.code" :value="lang.code">{{ lang.name }}</option>
             </select>
           </div>
 
-          <!-- Only show profile icon -->
           <!-- Profile avatar and username -->
           <div class="settings-button" @click="$emit('open-profile')">
             <img :src="avatarUrl" class="user-avatar" />
             <span v-if="userName" class="welcome-msg">Hi, {{ userName }}</span>
           </div>
-
         </div>
 
         <button class="menu-open-btn" @click="openMenu">
@@ -222,6 +223,7 @@ const Header = {
       </div>
     </header>
   `,
+
   data() {
     return {
       isMenuActive: false,
@@ -266,8 +268,8 @@ const Header = {
       }
     }
   }
-
 };
+
 
 // Hero Section Component
 const HeroSection = {
