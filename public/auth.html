@@ -53,6 +53,12 @@
           </div>
 
           <button type="button" class="login-btn" @click="submitLogin">Login</button>
+          <div v-if="showCaptcha" class="captcha-box">
+            <label>Solve: {{ captchaQuestion }}</label>
+            <input v-model="captchaAnswer" type="text" placeholder="Your answer" />
+            <button @click="verifyCaptcha">Verify</button>
+          </div>
+
 
           <div class="toggle-link">
             Don't have an account? <a @click="isSignUp = true">Sign up</a>
@@ -62,10 +68,13 @@
 
       <div>
         <div class="or-divider">or</div>
-        <a class="google-signin-button" href="http://localhost:8080/auth/google">
-          <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" class="google-icon" />
+        <a class="google-signin-button" href="http://localhost:8080/auth/google"
+          style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 16px; background: white; border-radius: 8px; text-decoration: none; font-weight: bold; color: #444; font-size: 15px;">
+          <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo"
+            style="width: 20px; height: 20px;" />
           <span>Sign in with Google</span>
         </a>
+
       </div>
     </div>
 
@@ -86,6 +95,13 @@
 
     createApp({
       setup() {
+
+        const showCaptcha = ref(false);
+        const captchaQuestion = ref('');
+        const captchaAnswer = ref('');
+        const expectedAnswer = ref(0);
+
+
         const isSignUp = ref(false);
         const username = ref("");
         const password = ref("");
@@ -98,9 +114,52 @@
         const resetUsername = ref("");
         const newPassword = ref("");
 
+
+        const generateCaptcha = () => {
+          const getRandomNum = () => Math.floor(Math.random() * 21);
+          const getRandomOp = () => (Math.random() < 0.5 ? '+' : '-');
+
+          const a = getRandomNum();
+          const b = getRandomNum();
+          const c = getRandomNum();
+          const op1 = getRandomOp();
+          const op2 = getRandomOp();
+
+          const expression = `${a} ${op1} ${b} ${op2} ${c}`;
+          captchaQuestion.value = `${expression} = ?`;
+
+
+          expectedAnswer.value = eval(expression);
+        };
+
         const togglePassword = () => {
           showPassword.value = !showPassword.value;
         };
+
+        const verifyCaptcha = () => {
+          if (parseInt(captchaAnswer.value) === expectedAnswer.value) {
+            localStorage.setItem('username', username.value);
+            Swal.fire({
+              icon: 'success',
+              title: 'Login successful!',
+              toast: true,
+              position: 'top-end',
+              timer: 2000,
+              showConfirmButton: false,
+            }).then(() => {
+              window.location.href = "index.html";
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Wrong answer',
+              text: 'Please try again.',
+            });
+            generateCaptcha();
+            captchaAnswer.value = '';
+          }
+        };
+
 
         const openForgotPassword = () => {
           showForgotPassword.value = true;
@@ -162,20 +221,41 @@
             });
 
             const data = await res.json();
+
             if (res.ok) {
-              // Store the JWT token in localStora
-              localStorage.setItem('username', username.value);
-
-
+              // ✅ Login successful
+              generateCaptcha(); // generate a new captcha
               Swal.fire({
-                icon: 'success',
-                title: 'Login successful!',
-                toast: true,
-                position: 'top-end',
-                timer: 2000,
-                showConfirmButton: false,
-              }).then(() => {
-                window.location.href = "index.html";
+                title: `🔐 Solve this to continue`,
+                html: `
+          <p><strong>${captchaQuestion.value}</strong></p>
+          <input id="captcha-input" type="number" placeholder="Answer" class="swal2-input" />
+        `,
+                confirmButtonText: "Verify",
+                preConfirm: () => {
+                  const inputVal = parseInt(document.getElementById('captcha-input').value);
+                  if (isNaN(inputVal) || inputVal !== expectedAnswer.value) {
+                    Swal.showValidationMessage("❌ Wrong answer. Try again!");
+                    generateCaptcha(); // re-generate captcha
+                    return false;
+                  }
+                  return true;
+                }
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  // captcha verified
+                  localStorage.setItem("username", username.value);
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Login successful!',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    showConfirmButton: false,
+                  }).then(() => {
+                    window.location.href = "index.html";
+                  });
+                }
               });
             } else {
               Swal.fire({
@@ -193,6 +273,8 @@
             });
           }
         };
+
+
 
 
         const submitSignUp = async () => {
@@ -251,6 +333,10 @@
           openForgotPassword,
           closeForgotPassword,
           submitForgotPassword,
+          showCaptcha,
+          captchaQuestion,
+          captchaAnswer,
+          verifyCaptcha,
         };
       },
     }).mount("#loginApp");

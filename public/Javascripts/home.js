@@ -50,32 +50,55 @@ const App = {
     this.isDarkMode = localStorage.getItem('theme') === 'dark';
     this.applyTheme();
 
-    const username = localStorage.getItem('username');
-    if (username) {
-      this.userName = username;
+    const params = new URLSearchParams(window.location.search);
+    const usernameFromURL = params.get("username");
+    const avatarFromURL = params.get("avatar");
+
+    if (usernameFromURL) {
+      localStorage.setItem("username", usernameFromURL);
+      this.userName = usernameFromURL;
+    } else {
+      const storedUsername = localStorage.getItem("username");
+      if (storedUsername) this.userName = storedUsername;
+    }
+
+    if (avatarFromURL) {
+      localStorage.setItem("avatar", avatarFromURL);
+      this.userAvatarUrl = avatarFromURL;
+    } else {
+      const storedAvatar = localStorage.getItem("avatar");
+      if (storedAvatar) this.userAvatarUrl = storedAvatar;
     }
 
     const profile = JSON.parse(localStorage.getItem('userProfile'));
     if (profile) {
       this.userAvatarUrl = profile.avatarUrl || this.userAvatarUrl;
-      this.userName = profile.name || '';
+      this.userName = profile.name || this.userName;
     }
 
     if (window.location.hash === '#openProfile') {
       this.showProfileForm = true;
     }
 
-
     const currentQuery = this.searchQueryFromURL;
     if (currentQuery) {
       this.query = currentQuery;
     }
   },
+
+
   methods: {
     handleProfileUpdate(profile) {
-      this.userAvatarUrl = profile.avatarUrl || this.userAvatarUrl;
-      this.userName = profile.name || '';
+      if (profile.avatarUrl) {
+        this.userAvatarUrl = profile.avatarUrl;
+        localStorage.setItem("avatar", profile.avatarUrl);
+      }
+      if (profile.name) {
+        this.userName = profile.name;
+        localStorage.setItem("username", profile.name);
+      }
     },
+
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode;
       localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
@@ -179,9 +202,6 @@ const Header = {
             <label for="language">
               <ion-icon name="globe-outline"></ion-icon>
             </label>
-            <select name="language" id="language" v-model="selectedLanguage">
-              <option v-for="lang in languages" :key="lang.code" :value="lang.code">{{ lang.name }}</option>
-            </select>
           </div>
 
           <!-- Profile avatar and username -->
@@ -328,11 +348,6 @@ const Footer = {
             <div class="divider"></div>
 
             <div class="quicklink-wrapper">
-              <ul class="quicklink-list">
-                <li v-for="(link, index) in supportLinks" :key="index">
-                  <a :href="link.href" class="quicklink-link">{{ link.text }}</a>
-                </li>
-              </ul>
 
               <ul class="social-list">
                 <li v-for="(social, index) in socialLinks" :key="index">
@@ -348,10 +363,9 @@ const Footer = {
         <div class="footer-bottom">
           <div class="container">
             <p class="copyright">
-              &copy; {{ currentYear }} <a href="#">Cinesphere</a>. All Rights Reserved
+              &copy; {{ currentYear }} <a href="#">Cinesphere</a>.
             </p>
 
-            <img src="./assets/images/footer-bottom-img.png" alt="Online banking companies logo" class="footer-bottom-img">
           </div>
         </div>
       </footer>
@@ -359,18 +373,6 @@ const Footer = {
   data() {
     return {
       currentYear: new Date().getFullYear(),
-      quickLinks: [
-        { text: 'Faq', href: '#' },
-        { text: 'Help center', href: '#' },
-        { text: 'Terms of use', href: '#' },
-        { text: 'Privacy', href: '#' }
-      ],
-      supportLinks: [
-        { text: 'Live', href: '#' },
-        { text: 'Faq', href: '#' },
-        { text: 'Privacy policy', href: '#' },
-        { text: 'Watch list', href: '#' }
-      ],
       socialLinks: [
         { icon: 'logo-facebook', href: '#' },
         { icon: 'logo-twitter', href: '#' },

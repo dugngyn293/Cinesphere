@@ -188,6 +188,13 @@
                 }
 
                 if (res.ok && data.success) {
+                    // ✅ Update successful
+                    localStorage.setItem("username", username);
+
+                    if (data.avatarUrl) {
+                        localStorage.setItem("avatar", data.avatarUrl);
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: '✅ update successful',

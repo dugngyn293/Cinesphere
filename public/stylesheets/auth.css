@@ -217,6 +217,52 @@ body {
     background: #e04152;
 }
 
+/* capcha */
+.captcha-box {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.captcha-box label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.captcha-box input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    margin-bottom: 10px;
+}
+
+.captcha-box input::placeholder {
+    color: #ccc;
+}
+
+.captcha-box button {
+    width: 100%;
+    padding: 12px;
+    background-color: #ff416c;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s ease;
+}
+
+.captcha-box button:hover {
+    background-color: #ff2e5c;
+}
+
+
 @media (max-width: 400px) {
     .login-box {
         width: 90%;

@@ -142,12 +142,17 @@ app.get("/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    res.redirect("/");
+    const user = req.user;
+    const username = user.username || user.email.split('@')[0] || 'User';
+    const avatar = user.profile_image_url || '';
+
+    res.redirect(`/index.html?username=${encodeURIComponent(username)}&avatar=${encodeURIComponent(avatar)}`);
   }
 );
+
 
 app.get("/api/user", (req, res) => {
   if (!req.user) return res.status(401).json({ user: null });
