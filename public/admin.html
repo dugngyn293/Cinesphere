@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -149,7 +148,9 @@
     <script>
         async function fetchUsers() {
             try {
-                const response = await fetch('/admin/users');
+                const response = await fetch('/admin/users', {
+                    credentials: 'include'
+                });
                 if (!response.ok) throw new Error('Network error');
 
                 const users = await response.json();
@@ -216,7 +217,8 @@
                     return fetch(`/admin/reset-password/${userId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ newPassword })
+                        body: JSON.stringify({ newPassword }),
+                        credentials: 'include'
                     })
                         .then(res => res.json())
                         .then(data => {
@@ -253,7 +255,7 @@
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/admin/delete-user/${userId}`, { method: 'DELETE' })
+                    fetch(`/admin/delete-user/${userId}`, { method: 'DELETE', credentials: 'include' })
                         .then(res => res.json())
                         .then(data => {
                             if (data.success) {
@@ -287,7 +289,13 @@
         }
 
         function logout() {
-            window.location.href = 'index.html';
+
+            fetch('/api/logout', { method: 'POST' })
+                .finally(() => {
+                    // return auth.html
+                    localStorage.removeItem('username'); // delete username from localStorage
+                    window.location.href = 'auth.html';
+                });
         }
 
         document.getElementById('searchUser').addEventListener('input', function () {

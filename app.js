@@ -26,7 +26,13 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
-
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -48,14 +54,6 @@ app.use('/users', usersRouter);
 app.use('/api', usersRouter);
 
 // app.use('/api', authRouter);
-
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
 app.use('/', adminRoutes);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -311,10 +309,10 @@ app.post('/api/login', async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-
+    console.log('Logged-in user:', user);
     req.session.user = user; // lưu session
 
-    res.status(200).json({ message: 'Login successful', userId: user.id });
+    res.status(200).json({ message: 'Login successful', userId: user.id, role: user.role });
   } catch (err) {
     res.status(500).json({ message: 'Server error during login.' });
   }

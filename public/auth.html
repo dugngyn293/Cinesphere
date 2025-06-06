@@ -231,8 +231,12 @@
             const data = await res.json();
 
             if (res.ok) {
-              // ✅ Login successful
-              generateCaptcha(); // generate a new captcha
+              // ✅ Login successful – get user role from check-auth
+              const user = await fetch('http://localhost:8080/check-auth').then(r => r.json());
+              const userRole = user.role;
+
+              // 🔐 Show captcha
+              generateCaptcha();
               Swal.fire({
                 title: `🔐 Solve this to continue`,
                 html: `
@@ -251,7 +255,7 @@
                 }
               }).then((result) => {
                 if (result.isConfirmed) {
-                  // captcha verified
+                  // ✅ Captcha verified
                   localStorage.setItem("username", username.value);
                   Swal.fire({
                     icon: 'success',
@@ -261,16 +265,11 @@
                     timer: 2000,
                     showConfirmButton: false,
                   }).then(() => {
-                    fetch('http://localhost:8080/check-auth')
-                      .then(r => r.json())
-                      .then(user => {
-                        console.log('✅ Logged-in user:', user); // debug
-                        if (user.role === 'admin') {
-                          window.location.href = 'admin.html';
-                        } else {
-                          window.location.href = 'index.html';
-                        }
-                      });
+                    if (userRole === 'admin') {
+                      window.location.href = 'admin.html';
+                    } else {
+                      window.location.href = 'index.html';
+                    }
                   });
                 }
               });
@@ -290,6 +289,7 @@
             });
           }
         };
+
 
 
 
