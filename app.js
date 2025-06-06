@@ -65,6 +65,13 @@ function ensureAuthenticated(req, res, next) {
   }
   res.redirect('/auth.html');
 }
+function ensureAdminHtml(req, res, next) {
+  const user = req.session?.user;
+  if (user && user.role === 'admin') {
+    return next();
+  }
+  return res.redirect('/auth.html');
+}
 
 passport.use(
   new GoogleStrategy(
@@ -347,8 +354,26 @@ app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.get("/auth.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "auth.html"));
 });
+// Kiểm tra user hiện tại (dùng cho redirect sau login)
+app.get('/check-auth', (req, res) => {
+  const user = req.user || req.session.user;
+
+  if (user) {
+    return res.json({
+      isAuthenticated: true,
+      username: user.username,
+      role: user.role || 'user'
+    });
+  }
+
+  res.status(401).json({ isAuthenticated: false });
+});
+
 app.get("/updateprofile.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "updateprofile.html"));
+});
+app.get("/search.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "search.html"));
 });
 app.get("/badge.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "badge.html"));
@@ -364,9 +389,10 @@ app.get("/star.html", (req, res) => {
 app.get("/MovieDetail.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "MovieDetail.html"));
 });
-app.get("/admin.html", ensureAuthenticated, (req, res) => {
+app.get("/admin.html", ensureAdminHtml, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
+
 // Protect main app routes
 app.get("/", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));

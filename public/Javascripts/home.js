@@ -34,6 +34,7 @@ const App = {
   data() {
     return {
       query: '',
+      results: [],
       showProfileForm: false,
       isDarkMode: false,
       userAvatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
@@ -83,6 +84,21 @@ const App = {
     const currentQuery = this.searchQueryFromURL;
     if (currentQuery) {
       this.query = currentQuery;
+
+      fetch(`/api/search?query=${encodeURIComponent(currentQuery)}`)
+        .then(res => res.json())
+        .then(data => {
+          this.results = data.results.map(movie => ({
+            id: movie.id,
+            title: movie.title,
+            poster: movie.poster_path
+              ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+              : '/images/default.jpg',
+            year: movie.release_date?.split('-')[0] || 'N/A',
+            overview: movie.overview || '',
+          }));
+        })
+        .catch(err => console.error('Search failed:', err));
     }
   },
 
@@ -113,9 +129,12 @@ const App = {
     },
     handleSearch() {
       const encoded = encodeURIComponent(this.query);
-      window.history.pushState({}, '', `?query=${encoded}`);
+      window.location.href = `search.html?query=${encoded}`;
+    },
 
-      window.dispatchEvent(new Event('popstate'));
+
+    handleOpenDetail(id) {
+      window.location.href = `/MovieDetail.html?id=${id}`;
     }
   },
   template: `
@@ -145,7 +164,17 @@ const App = {
             @keyup.enter="handleSearch"
           />
 
-          <SearchResultItem v-if="searchQueryFromURL" :query="searchQueryFromURL" />
+          <div v-if="searchQueryFromURL">
+            <h2>Search Results for "{{ query }}"</h2>
+            <div class="search-results">
+              <SearchResultItem
+                v-for="item in results"
+                :key="item.id"
+                :item="item"
+                @open-detail="handleOpenDetail"
+              />
+            </div>
+          </div>
 
           <template v-else>
             <HeroSection />
@@ -283,10 +312,11 @@ const Header = {
     },
     handleSearch() {
       if (this.searchQuery.trim() !== '') {
-        const query = encodeURIComponent(this.searchQuery.trim());
-        window.location.href = `/api/search?query=${query}`;
+        const encoded = encodeURIComponent(this.searchQuery.trim());
+        window.location.href = `/search.html?query=${encoded}`;
       }
     }
+
   }
 };
 

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Search Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="./stylesheets/search.css" />
+</head>
+
+<body>
+    <button onclick="window.location.href='index.html'" class="back-home-btn">🔙 Back to Home</button>
+    <div id="searchApp">
+        <div class="container">
+            <h2>Search Results for "{{ query }}"</h2>
+
+            <div class="results-grid">
+                <div class="movie-card" v-for="movie in results" :key="movie.id">
+                    <div @click="goToDetail(movie.id)" style="cursor: pointer;">
+                        <img :src="movie.poster" :alt="movie.title + ' poster'" class="poster" />
+                    </div>
+
+                    <div class="title-wrapper">
+                        <h3 class="movie-title">{{ movie.title }}</h3>
+                        <p class="movie-year">{{ movie.year }}</p>
+                    </div>
+
+                    <div class="movie-meta">
+                        <span class="quality-badge">HD</span>
+                        <span class="duration">⏱ N/A</span>
+                        <span class="rating">⭐ {{ movie.rating }}</span>
+                    </div>
+
+                    <div class="stars">
+                        <span v-for="star in 5" :key="star" :class="{ filled: star <= movie.selectedStars }"
+                            @click="rateMovie(movie, star)">★</span>
+                    </div>
+
+                    <button class="playlist-btn" @click="addToPlaylist(movie)">
+                        ➕ Add to Playlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    query: '',
+                    results: []
+                };
+            },
+            mounted() {
+                const params = new URLSearchParams(window.location.search);
+                const q = params.get('query');
+                if (!q) return;
+
+                this.query = q;
+
+                const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || [];
+
+                fetch(`/api/search?query=${encodeURIComponent(q)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        this.results = data.results.map(movie => {
+                            const ratingObj = ratedMovies.find(m => m.id === movie.id);
+                            return {
+                                id: movie.id,
+                                title: movie.title,
+                                poster: movie.poster_path
+                                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                                    : './images/default.jpg',
+                                year: movie.release_date?.split('-')[0] || 'N/A',
+                                rating: movie.vote_average?.toFixed(1) || 'N/A',
+                                selectedStars: ratingObj?.rating || 0
+                            };
+                        });
+                    });
+            },
+            methods: {
+                goToDetail(id) {
+                    window.location.href = `MovieDetail.html?id=${id}`;
+                },
+                addToPlaylist(movie) {
+                    const playlist = JSON.parse(localStorage.getItem('playlist')) || [];
+                    const exists = playlist.some(m => m.id === movie.id);
+                    if (exists) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Already in Playlist',
+                            text: `"${movie.title}" is already in your playlist.`,
+                            toast: true,
+                            timer: 1500,
+                            position: 'top-end',
+                            showConfirmButton: false
+                        });
+                        return;
+                    }
+
+                    playlist.push(movie);
+                    localStorage.setItem('playlist', JSON.stringify(playlist));
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added!',
+                        text: `"${movie.title}" added to your playlist!`,
+                        toast: true,
+                        timer: 1500,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                },
+                rateMovie(movie, star) {
+                    movie.selectedStars = star;
+
+                    const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || [];
+                    const updated = ratedMovies.filter(m => m.id !== movie.id);
+                    updated.push({
+                        id: movie.id,
+                        title: movie.title,
+                        poster: movie.poster,
+                        year: movie.year,
+                        rating: star
+                    });
+
+                    localStorage.setItem('ratedMovies', JSON.stringify(updated));
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Rating Saved!',
+                        text: `You rated "${movie.title}" with ${star} star(s)!`,
+                        toast: true,
+                        timer: 1500,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                }
+            }
+        }).mount('#searchApp');
+    </script>
+</body>
+
+</html>

@@ -147,7 +147,15 @@
               timer: 2000,
               showConfirmButton: false,
             }).then(() => {
-              window.location.href = "index.html";
+              fetch('http://localhost:8080/check-auth')
+                .then(r => r.json())
+                .then(user => {
+                  if (user.role === 'admin') {
+                    window.location.href = 'admin.html';
+                  } else {
+                    window.location.href = 'index.html';
+                  }
+                });
             });
           } else {
             Swal.fire({
@@ -253,7 +261,16 @@
                     timer: 2000,
                     showConfirmButton: false,
                   }).then(() => {
-                    window.location.href = "index.html";
+                    fetch('http://localhost:8080/check-auth')
+                      .then(r => r.json())
+                      .then(user => {
+                        console.log('✅ Logged-in user:', user); // debug
+                        if (user.role === 'admin') {
+                          window.location.href = 'admin.html';
+                        } else {
+                          window.location.href = 'index.html';
+                        }
+                      });
                   });
                 }
               });
