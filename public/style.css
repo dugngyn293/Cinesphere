@@ -178,3 +178,24 @@ body {
   display: flex;
   justify-content: space-between;
 }
+
+.captcha-box {
+  margin-top: 15px;
+}
+
+.captcha-code {
+  font-family: monospace;
+  font-size: 24px;
+  letter-spacing: 4px;
+  background: #eee;
+  padding: 8px 12px;
+  display: inline-block;
+  margin-bottom: 10px;
+  user-select: none;
+}
+
+.error {
+  color: red;
+  margin-top: 5px;
+  font-size: 0.9em;
+}

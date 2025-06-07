@@ -1,6 +1,9 @@
 const { createApp, ref, onMounted, computed, nextTick } = Vue;
-
+import LoginModal from './login.js';
 createApp({
+  components: {
+    LoginModal
+  },
   setup() {
     const user = ref({
       displayName: '',
@@ -445,14 +448,7 @@ createApp({
     };
   },
   template: `
-    <div v-if="showModal" class="modal">
-      <div class="modal-content">
-        <h2>Sign in to continue</h2>
-        <a href="/auth/google"><button>Sign in with Google</button></a>
-      </div>
-    </div>
-
-    <div v-else>
+    <div v-if="!showModal">
       <!-- Top Bar -->
       <div class="navbar">
         <div class="left">
