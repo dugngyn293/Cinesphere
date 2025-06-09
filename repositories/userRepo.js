@@ -57,10 +57,15 @@ async function create({ username, email = '', password, google_id = null, profil
 
 // Verify user login (check by email or username)
 async function verifyPassword(identifier, candidatePassword) {
-  let user = await findByEmail(identifier);
-  if (!user) {
-    user = await findByUsername(identifier);
-  }
+  // The 'identifier' can be either an email or a username.
+  // We construct a query that safely checks both columns.
+  const query = `
+    SELECT * FROM users
+    WHERE email = ? OR username = ?
+  `;
+
+  const [rows] = await pool.query(query, [identifier, identifier]);
+  const user = rows[0];
 
   if (!user || !user.password) {
     console.log('❌ User not found or has no password');
