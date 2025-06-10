@@ -1,3 +1,4 @@
+/***** Overlay Wrapper *****/
 .profile-wrapper {
   position: fixed;
   inset: 0;
@@ -8,21 +9,7 @@
   z-index: 9999;
 }
 
-.profile-btn {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  border: none;
-  padding: 12px 16px;
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  text-align: left;
-  width: 100%;
-}
-
-
+/***** Profile Box *****/
 .profile-box {
   background: linear-gradient(135deg, #121212, #1e1e2f);
   color: #fff;
@@ -33,6 +20,13 @@
   position: relative;
   text-align: center;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.profile-box h2 {
+  margin-top: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
 }
 
 .btn-close {
@@ -46,7 +40,9 @@
   color: #fff;
 }
 
-.avatar-preview {
+/***** Avatar *****/
+.avatar-preview,
+.avatar-large {
   width: 100px;
   height: 100px;
   border-radius: 50%;
@@ -58,13 +54,56 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-.profile-box h2 {
-  margin-top: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
+.avatar-large {
+  border: 3px solid #fff;
 }
 
+/***** Input Fields *****/
+.profile-box input[type="text"],
+.profile-box input[type="email"],
+.profile-box input[type="file"],
+.profile-box input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  transition: background 0.2s;
+}
+
+.profile-box input:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+/***** Input Group *****/
+.input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.input-group i {
+  color: #aaa;
+  margin-right: 10px;
+}
+
+.input-group input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+}
+
+/***** Menu & Buttons *****/
 .profile-menu {
   list-style: none;
   padding: 0;
@@ -104,64 +143,21 @@
   opacity: 0.85;
 }
 
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #fff;
-  background-color: #fff;
-  padding: 2px;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+.profile-btn {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 10px;
   cursor: pointer;
-}
-
-
-.profile-box input[type="text"],
-.profile-box input[type="email"],
-.profile-box input[type="file"],
-.profile-box input[type="password"] {
+  transition: background 0.2s ease;
+  text-align: left;
   width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 10px;
-  border: none;
-  font-size: 1rem;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: white;
-  transition: background 0.2s;
 }
 
-.profile-box input:focus {
-  background-color: rgba(255, 255, 255, 0.1);
-  outline: none;
-}
-
-/* user input group */
-.input-group {
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  padding: 10px;
-  margin: 10px 0;
-}
-
-.input-group i {
-  color: #aaa;
-  margin-right: 10px;
-}
-
-.input-group input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: white;
-  font-size: 1rem;
-  outline: none;
-}
-
-/**** scroll and delete from playlist ****/
+/***** Playlist Scroll Section *****/
 .scrollable-playlist {
   max-height: 250px;
   overflow-y: auto;
@@ -190,17 +186,7 @@
   color: #ff2e2e;
 }
 
-.avatar-large {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-}
-
-
-/**** responsive design ****/
+/***** Responsive Adjustments *****/
 @media (max-width: 480px) {
   .profile-box {
     width: 90%;
@@ -213,10 +199,11 @@
     margin-bottom: 1rem;
   }
 
-  .avatar-preview {
+  .avatar-preview,
+  .avatar-large {
     width: 80px;
     height: 80px;
-    border: 3px solid #fff;
+    border-width: 3px;
     margin-bottom: 1rem;
   }
 
@@ -244,6 +231,11 @@
   .profile-box input[type="password"] {
     padding: 10px;
     font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
+  .input-group {
+    padding: 8px;
     border-radius: 8px;
   }
 

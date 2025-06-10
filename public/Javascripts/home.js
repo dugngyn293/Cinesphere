@@ -235,9 +235,10 @@ const Header = {
 
           <!-- Profile avatar and username -->
           <div class="settings-button" @click="$emit('open-profile')">
-            <img :src="avatarUrl" class="user-avatar" />
+            <img :src="avatarUrl || '/default-avatar.png'" class="user-avatar" alt="User avatar" />
             <span v-if="userName" class="welcome-msg">Hi, {{ userName }}</span>
           </div>
+
         </div>
 
         <button class="menu-open-btn" @click="openMenu">
