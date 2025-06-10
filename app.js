@@ -1,4 +1,3 @@
-
 var createError = require('http-errors');
 var express = require('express');
 const session = require("express-session");
@@ -14,6 +13,7 @@ const bcrypt = require('bcrypt');
 const adminRoutes = require('./routes/adminRoutes');
 const adminRepo = require('./repositories/admin.js');
 const cors = require('cors');
+const { rateLimiter } = require('./middleware/rateLimiter');
 
 // In-memory rating caches (until DB layer wired)
 const movieRatings = {};
@@ -31,6 +31,12 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true, // Prevent client-side JS from accessing the cookie
+      secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
+      sameSite: 'strict', // Mitigate CSRF attacks
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
   })
 );
 
@@ -51,7 +57,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 app.use('/admin', adminRoutes);
 app.use('/users', usersRouter);
-app.use('/api', usersRouter);
+app.use('/api', rateLimiter, usersRouter);
 
 // app.use('/api', authRouter);
 app.use('/', adminRoutes);

@@ -56,7 +56,7 @@
           <div v-if="showCaptcha" class="captcha-box">
             <label>Solve: {{ captchaQuestion }}</label>
             <input v-model="captchaAnswer" type="text" placeholder="Your answer" />
-            <button @click="verifyCaptcha">Verify</button>
+            <button type="button" @click="verifyCaptcha">Verify</button>
           </div>
 
 
@@ -84,8 +84,10 @@
         <h3>Reset Password</h3>
         <input v-model="resetUsername" type="text" placeholder="Username" />
         <input v-model="newPassword" type="password" placeholder="New Password" />
-        <button class="close-btn" @click="closeForgotPassword">Cancel</button>
-        <button class="submit-btn" @click="submitForgotPassword">Submit</button>
+        <div class="modal-actions">
+          <button type="button" class="close-btn" @click="closeForgotPassword">Cancel</button>
+          <button type="button" class="submit-btn" @click="submitForgotPassword">Submit</button>
+        </div>
       </div>
     </div>
   </div>
