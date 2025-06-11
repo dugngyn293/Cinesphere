@@ -144,7 +144,11 @@
         div.innerHTML = `
           <img src="${movie.poster}" alt="${movie.title}" />
           <h3>${movie.title} (${movie.year})</h3>
-          <p class="star">${'★'.repeat(movie.rating)}${'☆'.repeat(5 - movie.rating)}</p>
+          <p class="star">
+            ${'★'.repeat(Math.max(0, Math.min(5, Number(movie.rating) || 0)))}
+            ${'☆'.repeat(Math.max(0, 5 - (Number(movie.rating) || 0)))}
+          </p>
+
           <button class="delete-btn" data-index="${index}">🗑 Delete</button>
         `;
         container.appendChild(div);

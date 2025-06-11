@@ -64,7 +64,7 @@ export const TvSeries = {
           overview: tv.overview || 'No description available.'
         }));
       } catch (error) {
-        console.error('Lỗi khi lấy top TV series:', error);
+        console.error('error', error);
       }
     },
     randomQuality() {
