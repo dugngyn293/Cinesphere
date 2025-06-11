@@ -15,6 +15,8 @@ import { TopTenChinese } from './TopTenChinese.js';
 import { TopTenKorean } from './TopTenKorean.js';
 import { TopTenJapanese } from './TopTenJapanese.js';
 import { SearchResultItem } from './SearchResultItem.js';
+import { Movies } from './Movies.js';
+import { TvShows } from './TvShows.js';
 
 const App = {
   components: {
@@ -29,7 +31,9 @@ const App = {
     TopTenChinese,
     TopTenKorean,
     TopTenJapanese,
-    SearchResultItem
+    SearchResultItem,
+    Movies,
+    TvShows
   },
   data() {
     return {
