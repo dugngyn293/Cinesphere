@@ -90,6 +90,7 @@ input {
     border: none;
 }
 
+
 select,
 button {
     font: inherit;
@@ -628,46 +629,69 @@ body.active {
 }
 
 .top-rated .filter-list {
+    display: flex;
+    justify-content: center;
     gap: 15px;
     margin-bottom: 50px;
+    flex-wrap: wrap;
 }
 
 .top-rated .filter-btn {
     position: relative;
-    background: var(--card-bg);
-    color: var(--card-meta-color);
+    background-color: #1e1e1e;
+    color: #ccc;
     font-size: var(--fs-10);
     font-weight: var(--fw-700);
     text-transform: uppercase;
-    padding: 17px 25px;
-    border-radius: 4px;
-    box-shadow: inset 0 3px 7px rgba(0, 0, 0, 0.3);
-    transition: var(--transition-1);
+    padding: 14px 24px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-.top-rated .filter-btn:focus {
-    color: var(--citrine);
-    text-shadow: 0 3px 25px hsla(57, 97%, 45%, 0.5);
+.top-rated .filter-btn:hover {
+    background-color: #f5c51822;
+    /* nhấn nhẹ khi hover */
+    color: #fff;
+    border-color: #f5c518;
+}
+
+.top-rated .filter-btn:focus,
+.top-rated .filter-btn.active {
+    background-color: #f5c518;
+    /* nền vàng nổi bật */
+    color: #111;
+    /* chữ đen dễ đọc */
+    border-color: #f5c518;
+    box-shadow: 0 0 15px #f5c518aa;
 }
 
 .top-rated .filter-btn:focus::before,
-.top-rated .filter-btn:focus::after {
+.top-rated .filter-btn:focus::after,
+.top-rated .filter-btn.active::before,
+.top-rated .filter-btn.active::after {
     content: "";
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: var(--citrine);
+    background: #111;
     width: 2px;
-    height: 15px;
+    height: 12px;
+    opacity: 0.7;
 }
 
-.top-rated .filter-btn:focus::before {
-    left: 0;
+.top-rated .filter-btn:focus::before,
+.top-rated .filter-btn.active::before {
+    left: 8px;
 }
 
-.top-rated .filter-btn:focus::after {
-    right: 0;
+.top-rated .filter-btn:focus::after,
+.top-rated .filter-btn.active::after {
+    right: 8px;
 }
+
 
 /*-----------------------------------*\
    * #TV SERIES

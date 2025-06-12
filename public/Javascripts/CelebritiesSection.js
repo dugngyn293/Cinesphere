@@ -9,7 +9,10 @@ export const CelebritiesSection = {
   template: `
     <section class="upcoming">
       <div class="container">
-        <SectionTitle title="Celebrities" />
+        <SectionTitle
+          title="Celebrities"
+          @filter-selected="handleFilter"
+        />
 
         <div class="slider-wrapper">
           <button class="slider-btn left" @click="scrollLeft">
@@ -17,7 +20,11 @@ export const CelebritiesSection = {
           </button>
 
           <ul class="movies-list has-scrollbar" ref="celebritySlider">
-            <li v-for="celebrity in celebrities" :key="celebrity.id" class="movie-item">
+            <li
+              v-for="celebrity in filteredCelebrities"
+              :key="celebrity.id"
+              class="movie-item"
+            >
               <MovieCard :movie="celebrity" />
             </li>
           </ul>
@@ -31,8 +38,17 @@ export const CelebritiesSection = {
   `,
   data() {
     return {
-      celebrities: []
+      celebrities: [],
+      selectedFilter: 'Movies'
     };
+  },
+  computed: {
+    filteredCelebrities() {
+      const type = this.selectedFilter === 'TV Shows' ? 'tv' : 'movie';
+      return this.celebrities.filter((person) =>
+        person.knownForMediaTypes.includes(type)
+      );
+    }
   },
   mounted() {
     this.fetchCelebrities();
@@ -44,6 +60,9 @@ export const CelebritiesSection = {
     scrollRight() {
       this.$refs.celebritySlider.scrollLeft += 400;
     },
+    handleFilter(filter) {
+      this.selectedFilter = filter;
+    },
     async fetchCelebrities() {
       const apiKey = '510215c9eeaff8af2bc03a26010d9bbb';
       const url = `https://api.themoviedb.org/3/person/popular?api_key=${apiKey}&language=en-US&page=1`;
@@ -52,18 +71,25 @@ export const CelebritiesSection = {
         const res = await fetch(url);
         const data = await res.json();
 
-        this.celebrities = (data.results || []).slice(0, 10).map((person) => ({
-          id: person.id,
-          title: person.name,
-          year: 'Known for: ' + (person.known_for_department || 'N/A'),
-          poster: person.profile_path
-            ? `https://image.tmdb.org/t/p/w500${person.profile_path}`
-            : null,
-          quality: 'Popular',
-          duration: '',
-          durationISO: '',
-          rating: person.popularity.toFixed(1)
-        }));
+        this.celebrities = (data.results || []).slice(0, 20).map((person) => {
+          const knownForTypes = (person.known_for || []).map((media) => media.media_type);
+
+          return {
+            id: person.id,
+            title: person.name,
+            year: person.known_for_department
+              ? `Known for: ${person.known_for_department}`
+              : 'Known for: N/A',
+            poster: person.profile_path
+              ? `https://image.tmdb.org/t/p/w500${person.profile_path}`
+              : null,
+            quality: 'Popular',
+            duration: '',
+            durationISO: '',
+            rating: person.popularity ? person.popularity.toFixed(1) : 'N/A',
+            knownForMediaTypes: knownForTypes
+          };
+        });
       } catch (error) {
         console.error('Error fetching celebrities:', error);
       }

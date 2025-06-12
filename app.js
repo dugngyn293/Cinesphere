@@ -276,8 +276,11 @@ app.post('/api/rate', (req, res) => {
 app.get("/api/find-films", async (req, res) => {
   const genres = req.query.genres;
   const apiKey = process.env.TMDB_API_KEY;
+
   try {
-    const response = await fetch(`https://api.themoviedb.org/3/discover/movie?with_genres=${genres}&api_key=${apiKey}`);
+    const response = await fetch(
+      `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genres}&language=en-US&page=1&sort_by=popularity.desc`
+    );
     const data = await response.json();
 
     res.json({ results: data.results });
@@ -286,6 +289,7 @@ app.get("/api/find-films", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch films." });
   }
 });
+
 
 app.get("/api/top-rated", async (req, res) => {
   const apiKey = process.env.TMDB_API_KEY;

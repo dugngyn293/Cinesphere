@@ -88,13 +88,13 @@ export const TvShows = {
     toggleCategory(category) {
       if (this.selectedCategories.includes(category)) {
         this.selectedCategories = this.selectedCategories.filter(c => c !== category);
-      } else if (this.selectedCategories.length < 2) {
+      } else if (this.selectedCategories.length < 4) {
         this.selectedCategories.push(category);
       } else {
         Swal && Swal.fire({
           icon: 'info',
           title: 'Limit reached',
-          text: 'You can only select up to 2 categories.',
+          text: 'You can only select up to 4 categories.',
           timer: 1500,
           showConfirmButton: false,
           toast: true,
