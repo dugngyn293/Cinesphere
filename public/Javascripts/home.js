@@ -207,10 +207,12 @@ const App = {
               />
             </div>
           </div>
-          <template v-if="currentSection === 'movies'">
+          <div v-else-if="currentPage === 'movies'">
             <Movies />
-          </template>
-
+          </div>
+          <div v-else-if="currentPage === 'tv'">
+            <TvShows />
+          </div>
           <template v-else>
             <HeroSection />
             <TopTenAllTimes />
@@ -320,9 +322,9 @@ const Header = {
         { code: 'vi', name: 'Vietnamese' }
       ],
       navItems: [
-        { text: 'Home', link: '/' },
-        { text: 'Movies', link: '/movies' },
-        { text: 'TV Series', link: '/tv' }
+        { text: 'Home', page: 'home' },
+        { text: 'Movies', page: 'movies' },
+        { text: 'TV Series', page: 'tv' }
       ],
       socialMedia: [
         { icon: 'logo-facebook', link: '#' },
