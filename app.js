@@ -123,6 +123,7 @@ passport.use(
             email: email,
             username: displayName, // Or generate a unique username
             profile_image_url: profileImageUrl,
+            role: 'user'
             // Password is not set for OAuth users
           };
           user = await UserRepo.create(newUser);
@@ -154,15 +155,38 @@ app.get("/auth/google",
 );
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { failureRedirect: '/auth.html' }),
   (req, res) => {
     const user = req.user;
-    const username = user.username || user.email.split('@')[0] || 'User';
-    const avatar = user.profile_image_url || '';
 
-    res.redirect(`/index.html?username=${encodeURIComponent(username)}&avatar=${encodeURIComponent(avatar)}`);
+    // Make sure role exists before saving to session
+    if (!user.role) {
+      user.role = 'user'; // default fallback role
+    }
+
+    req.session.user = user;
+    req.session.save(() => {
+      const username = user.username || user.email.split('@')[0];
+      const avatar = user.profile_image_url || '';
+      res.redirect(`/index.html?username=${encodeURIComponent(username)}&avatar=${encodeURIComponent(avatar)}`);
+    });
   }
 );
+
+
+app.get("/api/discover-tv", async (req, res) => {
+  const genres = req.query.genres;
+  const apiKey = process.env.TMDB_API_KEY;
+
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/discover/tv?with_genres=${genres}&api_key=${apiKey}`);
+    const data = await response.json();
+    res.json({ results: data.results });
+  } catch (error) {
+    console.error("Error fetching TV shows:", error);
+    res.status(500).json({ error: "Failed to fetch TV shows." });
+  }
+});
 
 
 app.get("/api/user", (req, res) => {
@@ -399,6 +423,9 @@ app.get("/admin.html", ensureAdminHtml, (req, res) => {
 
 // Protect main app routes
 app.get("/", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+app.get("/index.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 app.get("*", ensureAuthenticated, (req, res) => {

@@ -139,7 +139,8 @@
         };
 
         const verifyCaptcha = () => {
-          if (parseInt(captchaAnswer.value) === expectedAnswer.value) {
+          const userAnswer = parseInt(captchaAnswer.value);
+          if (userAnswer === expectedAnswer.value) {
             localStorage.setItem('username', username.value);
             Swal.fire({
               icon: 'success',
@@ -160,15 +161,17 @@
                 });
             });
           } else {
+
             Swal.fire({
               icon: 'error',
               title: 'Wrong answer',
               text: 'Please try again.',
             });
             generateCaptcha();
-            captchaAnswer.value = '';
+            captchaAnswer.value = '';  // Reset input
           }
         };
+
 
 
         const openForgotPassword = () => {
@@ -232,13 +235,21 @@
 
             const data = await res.json();
 
-            if (res.ok) {
-              // ✅ Login successful – get user role from check-auth
-              const user = await fetch('http://localhost:8080/check-auth').then(r => r.json());
-              const userRole = user.role;
+            if (!res.ok) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Login failed',
+                text: data.message || "Unknown error",
+              });
+              return;
+            }
 
-              // 🔐 Show captcha
+
+            const user = await fetch('http://localhost:8080/check-auth').then(r => r.json());
+            const userRole = user.role;
+            const showCaptchaModal = () => {
               generateCaptcha();
+
               Swal.fire({
                 title: `🔐 Solve this to continue`,
                 html: `
@@ -246,18 +257,19 @@
           <input id="captcha-input" type="number" placeholder="Answer" class="swal2-input" />
         `,
                 confirmButtonText: "Verify",
+                showCancelButton: true,
+                focusConfirm: false,
                 preConfirm: () => {
                   const inputVal = parseInt(document.getElementById('captcha-input').value);
                   if (isNaN(inputVal) || inputVal !== expectedAnswer.value) {
                     Swal.showValidationMessage("❌ Wrong answer. Try again!");
-                    generateCaptcha(); // re-generate captcha
                     return false;
                   }
                   return true;
                 }
               }).then((result) => {
                 if (result.isConfirmed) {
-                  // ✅ Captcha verified
+                  // ✅ right answer
                   localStorage.setItem("username", username.value);
                   Swal.fire({
                     icon: 'success',
@@ -273,15 +285,17 @@
                       window.location.href = 'index.html';
                     }
                   });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                } else {
+                  showCaptchaModal();
                 }
               });
-            } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Login failed',
-                text: data.message || "Unknown error",
-              });
-            }
+            };
+
+
+            showCaptchaModal();
+
           } catch (err) {
             console.error("Error:", err);
             Swal.fire({
@@ -291,6 +305,7 @@
             });
           }
         };
+
 
 
 

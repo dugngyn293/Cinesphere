@@ -37,6 +37,7 @@ const App = {
   },
   data() {
     return {
+      currentSection: 'home',
       query: '',
       results: [],
       showProfileForm: false,
@@ -53,6 +54,20 @@ const App = {
     }
   },
   mounted() {
+    const hash = window.location.hash;
+    this.updateSectionFromHash(hash);
+
+    window.addEventListener('hashchange', () => {
+      this.updateSectionFromHash(window.location.hash);
+    });
+    if (hash === '#movies') {
+      this.currentSection = 'movies';
+    } else if (hash === '#tv') {
+      this.currentSection = 'tv';
+    } else {
+      this.currentSection = 'home';
+    }
+
     this.isDarkMode = localStorage.getItem('theme') === 'dark';
     this.applyTheme();
 
@@ -91,19 +106,19 @@ const App = {
       this.query = currentQuery;
 
       fetch(`/api/search?query=${encodeURIComponent(currentQuery)}`)
-        .then(res => res.json())
-        .then(data => {
-          this.results = data.results.map(movie => ({
+        .then((res) => res.json())
+        .then((data) => {
+          this.results = data.results.map((movie) => ({
             id: movie.id,
             title: movie.title,
             poster: movie.poster_path
               ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
               : '/images/default.jpg',
-            year: movie.release_date?.split('-')[0] || 'N/A',
+            year: (movie.release_date && movie.release_date.split('-')[0]) || 'N/A',
             overview: movie.overview || '',
           }));
         })
-        .catch(err => console.error('Search failed:', err));
+        .catch((err) => console.error('Search failed:', err));
     }
     window.addEventListener('hashchange', () => {
       this.currentPage = window.location.hash.replace('#', '') || 'home';
@@ -112,6 +127,15 @@ const App = {
 
 
   methods: {
+    updateSectionFromHash(hash) {
+      if (hash === '#movies') {
+        this.currentSection = 'movies';
+      } else if (hash === '#tv') {
+        this.currentSection = 'tv';
+      } else {
+        this.currentSection = 'home';
+      }
+    },
     handleProfileUpdate(profile) {
       if (profile.avatarUrl) {
         this.userAvatarUrl = profile.avatarUrl;
@@ -183,13 +207,10 @@ const App = {
               />
             </div>
           </div>
-
-          <div v-else-if="currentPage === 'movies'">
+          <template v-if="currentSection === 'movies'">
             <Movies />
-          </div>
-          <div v-else-if="currentPage === 'tv'">
-            <TvShows />
-          </div>
+          </template>
+
           <template v-else>
             <HeroSection />
             <TopTenAllTimes />
@@ -299,9 +320,9 @@ const Header = {
         { code: 'vi', name: 'Vietnamese' }
       ],
       navItems: [
-        { text: 'Home', page: 'home' },
-        { text: 'Movies', page: 'movies' },
-        { text: 'TV Series', page: 'tv' }
+        { text: 'Home', link: '/' },
+        { text: 'Movies', link: '/movies' },
+        { text: 'TV Series', link: '/tv' }
       ],
       socialMedia: [
         { icon: 'logo-facebook', link: '#' },
@@ -478,6 +499,8 @@ app.component('GoToTop', GoToTop);
 app.component('MovieCard', MovieCard);
 app.component('SectionTitle', SectionTitle);
 app.component('SearchResultItem', SearchResultItem);
+app.component('Movies', Movies);
+app.component('TvShows', TvShows);
 
 // Mount the app
 app.component('UserProfile', UserProfile);

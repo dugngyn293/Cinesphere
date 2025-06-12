@@ -52,7 +52,7 @@ export const CelebritiesSection = {
         const res = await fetch(url);
         const data = await res.json();
 
-        this.celebrities = (data.results || []).slice(0, 10).map(person => ({
+        this.celebrities = (data.results || []).slice(0, 10).map((person) => ({
           id: person.id,
           title: person.name,
           year: 'Known for: ' + (person.known_for_department || 'N/A'),
