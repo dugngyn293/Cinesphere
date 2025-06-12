@@ -4,13 +4,13 @@ export const Movies = {
       <div class="container">
         <h2 class="h2 section-title">Movies</h2>
 
-        <!-- Category Filter -->
+        <!-- Category Filter (multi-select) -->
         <ul class="filter-list">
           <li v-for="category in categories" :key="category">
             <button
               class="filter-btn"
-              :class="{ active: selectedCategory === category }"
-              @click="selectCategory(category)">
+              :class="{ active: selectedCategories.includes(category) }"
+              @click="toggleCategory(category)">
               {{ category }}
             </button>
           </li>
@@ -58,7 +58,7 @@ export const Movies = {
   data() {
     return {
       categories: ['Action', 'Comedy', 'Drama', 'Sci-Fi', 'Animation', 'Horror', 'Romance', 'Thriller', 'Mystery'],
-      selectedCategory: 'Action',
+      selectedCategories: [],
       filteredMovies: [],
       genreMap: {
         Action: 28,
@@ -73,18 +73,45 @@ export const Movies = {
       }
     };
   },
+  watch: {
+    selectedCategories: {
+      handler() {
+        this.fetchMoviesByGenres();
+      },
+      deep: true
+    }
+  },
   mounted() {
-    this.fetchMoviesByGenre(this.selectedCategory);
+
+    this.selectedCategories = ['Action'];
+    this.fetchMoviesByGenres();
   },
   methods: {
-    selectCategory(category) {
-      this.selectedCategory = category;
-      this.fetchMoviesByGenre(category);
+    toggleCategory(category) {
+      if (this.selectedCategories.includes(category)) {
+        this.selectedCategories = this.selectedCategories.filter(c => c !== category);
+      } else if (this.selectedCategories.length < 2) {
+        this.selectedCategories.push(category);
+      } else {
+        Swal && Swal.fire({
+          icon: 'info',
+          title: 'Limit reached',
+          text: 'You can only select up to 2 categories.',
+          timer: 1500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      }
     },
-    async fetchMoviesByGenre(category) {
-      const genreId = this.genreMap[category];
+    async fetchMoviesByGenres() {
+      if (this.selectedCategories.length === 0) {
+        this.filteredMovies = [];
+        return;
+      }
+      const genreIds = this.selectedCategories.map(cat => this.genreMap[cat]).join(',');
       try {
-        const res = await fetch(`/api/find-films?genres=${genreId}`);
+        const res = await fetch(`/api/find-films?genres=${genreIds}`);
         const data = await res.json();
         this.filteredMovies = (data.results || []).map(movie => ({
           id: movie.id,
@@ -109,7 +136,7 @@ export const Movies = {
       const list = JSON.parse(localStorage.getItem('playlist')) || [];
       const exists = list.find(m => m.id === movie.id);
       if (exists) {
-        Swal.fire({
+        Swal && Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'warning',
@@ -125,7 +152,7 @@ export const Movies = {
         list.push(movie);
         localStorage.setItem('playlist', JSON.stringify(list));
         movie.inPlaylist = true;
-        Swal.fire({
+        Swal && Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
@@ -149,7 +176,7 @@ export const Movies = {
         list.push({ ...movie, rating: rating });
       }
       localStorage.setItem('ratedMovies', JSON.stringify(list));
-      Swal.fire({
+      Swal && Swal.fire({
         icon: 'info',
         title: `⭐ ${rating} star${rating > 1 ? 's' : ''}`,
         text: `You just rated "${movie.title}".`,

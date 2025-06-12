@@ -4,13 +4,13 @@ export const TvShows = {
       <div class="container">
         <h2 class="h2 section-title">TV Shows</h2>
 
-        <!-- Category Filter -->
+        <!-- Category Filter (multi-select) -->
         <ul class="filter-list">
           <li v-for="category in categories" :key="category">
             <button
               class="filter-btn"
-              :class="{ active: selectedCategory === category }"
-              @click="selectCategory(category)">
+              :class="{ active: selectedCategories.includes(category) }"
+              @click="toggleCategory(category)">
               {{ category }}
             </button>
           </li>
@@ -58,7 +58,7 @@ export const TvShows = {
   data() {
     return {
       categories: ['Drama', 'Comedy', 'Action', 'Sci-Fi', 'Documentary', 'Mystery', 'Family', 'Crime', 'Animation'],
-      selectedCategory: 'Drama',
+      selectedCategories: ['Drama'], // Default to Drama
       tvShows: [],
       genreMap: {
         Drama: 18,
@@ -73,18 +73,43 @@ export const TvShows = {
       }
     };
   },
+  watch: {
+    selectedCategories: {
+      handler() {
+        this.fetchTvShowsByGenres();
+      },
+      deep: true
+    }
+  },
   mounted() {
-    this.fetchTvShowsByGenre(this.selectedCategory);
+    this.fetchTvShowsByGenres();
   },
   methods: {
-    selectCategory(category) {
-      this.selectedCategory = category;
-      this.fetchTvShowsByGenre(category);
+    toggleCategory(category) {
+      if (this.selectedCategories.includes(category)) {
+        this.selectedCategories = this.selectedCategories.filter(c => c !== category);
+      } else if (this.selectedCategories.length < 2) {
+        this.selectedCategories.push(category);
+      } else {
+        Swal && Swal.fire({
+          icon: 'info',
+          title: 'Limit reached',
+          text: 'You can only select up to 2 categories.',
+          timer: 1500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      }
     },
-    async fetchTvShowsByGenre(category) {
-      const genreId = this.genreMap[category];
+    async fetchTvShowsByGenres() {
+      if (this.selectedCategories.length === 0) {
+        this.tvShows = [];
+        return;
+      }
+      const genreIds = this.selectedCategories.map(cat => this.genreMap[cat]).join(',');
       try {
-        const res = await fetch(`/api/discover-tv?genres=${genreId}`);
+        const res = await fetch(`/api/discover-tv?genres=${genreIds}`);
         const data = await res.json();
         this.tvShows = (data.results || []).map(show => ({
           id: show.id,
@@ -107,7 +132,7 @@ export const TvShows = {
       const list = JSON.parse(localStorage.getItem('playlist')) || [];
       const exists = list.find(s => s.id === show.id);
       if (exists) {
-        Swal.fire({
+        Swal && Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'warning',
@@ -123,7 +148,7 @@ export const TvShows = {
         list.push(show);
         localStorage.setItem('playlist', JSON.stringify(list));
         show.inPlaylist = true;
-        Swal.fire({
+        Swal && Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
@@ -147,7 +172,7 @@ export const TvShows = {
         list.push({ ...show, userRating: rating });
       }
       localStorage.setItem('ratedShows', JSON.stringify(list));
-      Swal.fire({
+      Swal && Swal.fire({
         icon: 'info',
         title: `⭐ ${rating} star${rating > 1 ? 's' : ''}`,
         text: `You just rated "${show.title}".`,
