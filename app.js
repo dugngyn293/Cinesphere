@@ -32,13 +32,15 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      httpOnly: true, // Prevent client-side JS from accessing the cookie
-      secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-      sameSite: 'strict', // Mitigate CSRF attacks
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
+app.use(passport.initialize());
+app.use(passport.session());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -61,8 +63,6 @@ app.use('/api', rateLimiter, usersRouter);
 
 // app.use('/api', authRouter);
 app.use('/', adminRoutes);
-app.use(passport.initialize());
-app.use(passport.session());
 function ensureAuthenticated(req, res, next) {
   if ((req.isAuthenticated && req.isAuthenticated()) || req.session.user) {
     return next();
@@ -70,7 +70,7 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/auth.html');
 }
 function ensureAdminHtml(req, res, next) {
-  const user = req.session?.user;
+  const user = req.session && req.session.user;
   if (user && user.role === 'admin') {
     return next();
   }
@@ -87,54 +87,52 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // profile contains information from Google
+        console.log("✅ Google OAuth callback triggered");
+        console.log("🌐 Google profile:", profile);
+
         const googleId = profile.id;
         const email = profile.emails && profile.emails[0] && profile.emails[0].value;
         const displayName = profile.displayName;
         const profileImageUrl = profile.photos && profile.photos[0] && profile.photos[0].value;
 
         if (!email) {
+          console.log("❌ Email not returned from Google profile");
           return done(new Error("Email not provided by Google"), null);
         }
 
         let user = await UserRepo.findByGoogleId(googleId);
+        console.log("🔍 Lookup by Google ID:", user);
 
         if (!user) {
-          // If user not found by googleId, check by email to link accounts or find existing local user
           user = await UserRepo.findByEmail(email);
-          if (user) {
-            // User exists with this email but not linked to this Google ID yet.
-            // Optionally, update user to add google_id and potentially profile_image_url if it's better
-            // For now, we'll proceed assuming this user should be linked.
-            // If you want to update: await UserRepo.update(user.id, { google_id: googleId, profile_image_url: profileImageUrl });
-            // And then re-fetch: user = await UserRepo.findById(user.id);
-            // To keep it simple for now, we will create a new user if no googleId match,
-            // or you could throw an error / ask user to link manually if email is found but googleId is not.
-            // For this example, we will prioritize googleId. If no googleId, create new user if email isn't already tied to a *different* googleId.
-          }
+          console.log("📧 Lookup by Email:", user);
         }
 
         if (!user) {
-          // User doesn't exist, create a new one
-          // Ensure username is unique if display name is used directly
-          // For simplicity, using displayName. Consider a strategy for username uniqueness.
+          console.log("🆕 Creating new user...");
           const newUser = {
             google_id: googleId,
             email: email,
-            username: displayName, // Or generate a unique username
+            username: displayName,
             profile_image_url: profileImageUrl,
             role: 'user'
-            // Password is not set for OAuth users
           };
+
           user = await UserRepo.create(newUser);
+          console.log("✅ Created new user:", user);
         }
-        return done(null, user); // user should be your user object from your database
+
+        console.log("🎉 Finished Google auth. User:", user);
+        return done(null, user);
+
       } catch (err) {
+        console.error("❌ Error during Google auth:", err);
         return done(err, null);
       }
     }
   )
 );
+
 
 
 passport.serializeUser((user, done) => {
@@ -158,20 +156,23 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/auth.html' }),
   (req, res) => {
     const user = req.user;
+    console.log("🔄 Callback received. Session user:", user);
 
-    // Make sure role exists before saving to session
     if (!user.role) {
-      user.role = 'user'; // default fallback role
+      console.log("ℹ️ No role found, assigning default 'user'");
+      user.role = 'user';
     }
 
     req.session.user = user;
     req.session.save(() => {
       const username = user.username || user.email.split('@')[0];
       const avatar = user.profile_image_url || '';
+      console.log("✅ Redirecting to index.html with:", { username, avatar });
       res.redirect(`/index.html?username=${encodeURIComponent(username)}&avatar=${encodeURIComponent(avatar)}`);
     });
   }
 );
+
 
 
 app.get("/api/discover-tv", async (req, res) => {

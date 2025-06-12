@@ -3,7 +3,7 @@ version: "3.9"
 services:
   db:
     image: mysql:8.3
-    container_name: cinesphere-mysql
+    container_name: localhost
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
