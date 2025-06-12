@@ -42,7 +42,8 @@ const App = {
       showProfileForm: false,
       isDarkMode: false,
       userAvatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-      userName: ''
+      userName: '',
+      currentPage: window.location.hash.replace('#', '') || 'home'
     };
   },
   computed: {
@@ -104,6 +105,9 @@ const App = {
         })
         .catch(err => console.error('Search failed:', err));
     }
+    window.addEventListener('hashchange', () => {
+      this.currentPage = window.location.hash.replace('#', '') || 'home';
+    });
   },
 
 
@@ -180,6 +184,12 @@ const App = {
             </div>
           </div>
 
+          <div v-else-if="currentPage === 'movies'">
+            <Movies />
+          </div>
+          <div v-else-if="currentPage === 'tv'">
+            <TvShows />
+          </div>
           <template v-else>
             <HeroSection />
             <TopTenAllTimes />
@@ -262,7 +272,7 @@ const Header = {
 
           <ul class="navbar-list">
             <li v-for="item in navItems" :key="item.text">
-              <a :href="item.link" class="navbar-link">{{ item.text }}</a>
+              <a :href="'#' + item.page" class="navbar-link">{{ item.text }}</a>
             </li>
           </ul>
 
@@ -289,9 +299,9 @@ const Header = {
         { code: 'vi', name: 'Vietnamese' }
       ],
       navItems: [
-        { text: 'Home', link: '/' },
-        { text: 'Movies', link: '/movies' },
-        { text: 'TV Series', link: '/tv' }
+        { text: 'Home', page: 'home' },
+        { text: 'Movies', page: 'movies' },
+        { text: 'TV Series', page: 'tv' }
       ],
       socialMedia: [
         { icon: 'logo-facebook', link: '#' },
