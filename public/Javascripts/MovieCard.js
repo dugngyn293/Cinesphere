@@ -1,4 +1,3 @@
-
 export const MovieCard = {
   props: {
     movie: {
@@ -26,12 +25,10 @@ export const MovieCard = {
 
       <div class="card-meta">
         <div class="badge badge-outline">{{ movie.quality }}</div>
-
         <div class="duration">
           <ion-icon name="time-outline"></ion-icon>
           <time :datetime="movie.durationISO">{{ movie.duration }}</time>
         </div>
-
         <div class="rating">
           <ion-icon name="star"></ion-icon>
           <data>{{ movie.rating }}</data>
@@ -77,26 +74,53 @@ export const MovieCard = {
 
       this.showToast('success', 'Rating Saved!', `You rated "${this.movie.title}" with ${star} star(s)!`);
     },
-    addToPlaylist(movie) {
-      const playlist = JSON.parse(localStorage.getItem('playlist')) || [];
 
-      const exists = playlist.some((item) => item.id === movie.id);
-      if (exists) {
-        this.showToast('info', 'Already in Playlist', `"${movie.title}" is already in your playlist.`);
-        return;
+    async addToPlaylist(movie) {
+      try {
+        console.log("🎬 Movie raw data:", movie);
+
+        // Sanitize and prepare payload
+        const payload = {
+          id: movie.id || '',
+          title: movie.title || '',
+          poster: movie.poster || '',
+          year: movie.year || '',
+          rating: movie.rating === 'N/A' || movie.rating == null ? 0 : Number(movie.rating)
+        };
+
+        // Validate before sending
+        if (!payload.id || !payload.title || !payload.poster || !payload.year) {
+          console.warn("⚠️ Payload thiếu trường:", payload);
+          this.showToast('error', 'Invalid Movie', 'Movie info incomplete.');
+          return;
+        }
+
+        console.log("📦 Payload gửi backend:", payload);
+
+        const res = await fetch('/api/playlist/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('❌ Add to playlist failed:', errorText);
+          this.showToast('error', 'Failed', `Could not add "${movie.title}" to playlist.`);
+          return;
+        }
+
+        const data = await res.json();
+        console.log("✅ Playlist add response:", data);
+        this.showToast('success', 'Added!', `"${movie.title}" added to your playlist!`);
+
+      } catch (err) {
+        console.error('❌ Error adding to playlist:', err);
+        this.showToast('error', 'Error', 'Unexpected error occurred.');
       }
-
-      playlist.push({
-        id: movie.id,
-        title: movie.title,
-        poster: movie.poster,
-        year: movie.year,
-        rating: movie.rating
-      });
-
-      localStorage.setItem('playlist', JSON.stringify(playlist));
-      this.showToast('success', 'Added!', `"${movie.title}" added to your playlist!`);
     },
+
     showToast(icon, title, text) {
       Swal.fire({
         icon: icon,

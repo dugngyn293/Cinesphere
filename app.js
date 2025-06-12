@@ -14,6 +14,9 @@ const adminRoutes = require('./routes/adminRoutes');
 const adminRepo = require('./repositories/admin.js');
 const cors = require('cors');
 const { rateLimiter } = require('./middleware/rateLimiter');
+const playlistRoutes = require('./routes/playlistRoutes');
+
+
 
 // In-memory rating caches (until DB layer wired)
 const movieRatings = {};
@@ -57,9 +60,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 
 
+
 app.use('/admin', adminRoutes);
 app.use('/users', usersRouter);
 app.use('/api', rateLimiter, usersRouter);
+app.use('/api/playlist', playlistRoutes);
 
 // app.use('/api', authRouter);
 app.use('/', adminRoutes);

@@ -84,7 +84,6 @@
       margin-right: auto;
     }
 
-    /* ✅ Responsive adjustments */
     @media (max-width: 480px) {
       body {
         padding: 1.5rem 1rem;
@@ -114,7 +113,8 @@
   <div id="playlistApp">
     <h1>Your Playlist</h1>
     <div class="playlist-grid">
-      <movie-card v-for="(movie, index) in playlist" :key="movie.id" :movie="movie" @remove="removeMovie(index)" />
+      <movie-card v-for="(movie, index) in playlist" :key="movie.id" :movie="movie"
+        @remove="removeMovie(movie.id, index)" />
     </div>
     <button type="button" class="back-btn" onclick="window.location.href = '/index.html#openProfile'">
       ← Back to Settings
@@ -146,17 +146,55 @@
         };
       },
       methods: {
-        removeMovie(index) {
-          this.playlist.splice(index, 1);
-          localStorage.setItem('playlist', JSON.stringify(this.playlist));
+        async fetchPlaylist() {
+          console.log("📡 Fetching playlist...");
+          try {
+            const res = await fetch('/api/playlist/my', {
+              credentials: 'include' // 👈 rất quan trọng để gửi session
+            });
+            console.log("📥 Response status:", res.status);
+            if (!res.ok) throw new Error('Failed to load playlist');
+
+            const data = await res.json();
+            console.log("✅ Playlist data:", data);
+
+            if (!data.playlists || !Array.isArray(data.playlists)) {
+              console.warn("⚠️ 'playlists' không tồn tại hoặc không phải mảng:", data.playlists);
+            }
+
+            this.playlist = data.playlists || [];
+          } catch (err) {
+            console.error('❌ Error fetching playlist:', err);
+          }
+        },
+
+        async removeMovie(movieId, index) {
+          console.log(`🗑 Đang xóa movie ID = ${movieId}, tại index ${index}`);
+          try {
+            const res = await fetch(`/api/playlist/remove/${movieId}`, {
+              method: 'DELETE',
+              credentials: 'include'
+            });
+            console.log("📥 Delete response status:", res.status);
+
+            if (res.ok) {
+              console.log("✅ Xoá thành công:", movieId);
+              this.playlist.splice(index, 1);
+            } else {
+              const errorText = await res.text();
+              console.error('❌ Failed to remove movie:', errorText);
+            }
+          } catch (err) {
+            console.error('❌ Error removing movie:', err);
+          }
         }
       },
       mounted() {
-        const stored = localStorage.getItem('playlist');
-        this.playlist = stored ? JSON.parse(stored) : [];
+        this.fetchPlaylist();
       }
     }).mount('#playlistApp');
   </script>
+
 </body>
 
 </html>
