@@ -105,19 +105,19 @@ const App = {
       this.query = currentQuery;
 
       fetch(`/api/search?query=${encodeURIComponent(currentQuery)}`)
-        .then(res => res.json())
-        .then(data => {
-          this.results = data.results.map(movie => ({
+        .then((res) => res.json())
+        .then((data) => {
+          this.results = data.results.map((movie) => ({
             id: movie.id,
             title: movie.title,
             poster: movie.poster_path
               ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
               : '/images/default.jpg',
-            year: movie.release_date?.split('-')[0] || 'N/A',
+            year: (movie.release_date && movie.release_date.split('-')[0]) || 'N/A',
             overview: movie.overview || '',
           }));
         })
-        .catch(err => console.error('Search failed:', err));
+        .catch((err) => console.error('Search failed:', err));
     }
   },
 
