@@ -133,61 +133,127 @@ export const Movies = {
     goToDetail(movieId) {
       location.assign(`MovieDetail.html?id=${movieId}`);
     },
-    addToPlaylist(movie) {
-      const list = JSON.parse(localStorage.getItem('playlist')) || [];
-      const exists = list.find(m => m.id === movie.id);
-      if (exists) {
-        Swal && Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'warning',
-          title: 'Already in Playlist',
-          text: movie.title,
-          showConfirmButton: false,
-          timer: 2000,
-          timerProgressBar: true,
-          background: '#2b2b00',
-          color: '#fffacd'
+    async addToPlaylist(movie) {
+      try {
+        console.log("📤 Sending payload:", movie); // debug log
+
+        const res = await fetch('/api/playlist/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(movie)
         });
-      } else {
-        list.push(movie);
-        localStorage.setItem('playlist', JSON.stringify(list));
-        movie.inPlaylist = true;
+
+        if (res.ok) {
+          movie.inPlaylist = true;
+
+          Swal && Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Added to playlist!',
+            text: movie.title,
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            background: '#1e1e1e',
+            color: '#fff'
+          });
+        } else if (res.status === 409) {
+          Swal && Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: 'Already in Playlist',
+            text: movie.title,
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            background: '#2b2b00',
+            color: '#fffacd'
+          });
+        } else {
+          throw new Error(await res.text());
+        }
+      } catch (err) {
+        console.error('❌ Failed to add to playlist:', err);
         Swal && Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Could not add to playlist.',
           toast: true,
           position: 'top-end',
-          icon: 'success',
-          title: 'Added to playlist!',
-          text: movie.title,
-          showConfirmButton: false,
-          timer: 2000,
-          timerProgressBar: true,
-          background: '#1e1e1e',
+          background: '#2b2b2b',
           color: '#fff'
         });
       }
     },
-    rateMovie(movie, rating) {
-      movie.rating = rating;
-      const list = JSON.parse(localStorage.getItem('ratedMovies')) || [];
-      const existing = list.find(m => m.id === movie.id);
-      if (existing) {
-        existing.rating = rating;
-      } else {
-        list.push({ ...movie, rating: rating });
+
+
+
+    async rateMovie(movie, rating) {
+      movie.userRating = rating;
+
+      const payload = {
+        movieId: movie.id,
+        rating: rating,
+        title: movie.title,
+        poster: movie.poster,
+        year: movie.year
+      };
+
+      try {
+        console.log('📤 Sending rating:', payload);
+
+        const res = await fetch('/api/ratings/rate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.text();
+          console.error('❌ Failed to rate movie:', err);
+          Swal && Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: `Could not rate "${movie.title}".`,
+            toast: true,
+            position: 'top-end',
+            timer: 1800,
+            showConfirmButton: false
+          });
+          return;
+        }
+
+        Swal && Swal.fire({
+          icon: 'success',
+          title: `⭐ ${rating} star${rating > 1 ? 's' : ''}`,
+          text: `You rated "${movie.title}".`,
+          toast: true,
+          position: 'top-end',
+          timer: 1800,
+          showConfirmButton: false
+        });
+
+      } catch (err) {
+        console.error('❌ Error rating movie:', err);
+        Swal && Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An unexpected error occurred.',
+          toast: true,
+          position: 'top-end',
+          timer: 1800,
+          showConfirmButton: false
+        });
       }
-      localStorage.setItem('ratedMovies', JSON.stringify(list));
-      Swal && Swal.fire({
-        icon: 'info',
-        title: `⭐ ${rating} star${rating > 1 ? 's' : ''}`,
-        text: `You just rated "${movie.title}".`,
-        showConfirmButton: false,
-        timer: 1800,
-        toast: true,
-        position: 'top-end',
-        background: '#1e1e1e',
-        color: '#fff'
-      });
     }
+
   }
 };

@@ -15,6 +15,7 @@ const adminRepo = require('./repositories/admin.js');
 const cors = require('cors');
 const { rateLimiter } = require('./middleware/rateLimiter');
 const playlistRoutes = require('./routes/playlistRoutes');
+const ratingRoutes = require('./routes/ratingRoutes');
 
 
 
@@ -65,6 +66,7 @@ app.use('/admin', adminRoutes);
 app.use('/users', usersRouter);
 app.use('/api', rateLimiter, usersRouter);
 app.use('/api/playlist', playlistRoutes);
+app.use('/api/ratings', ratingRoutes);
 
 // app.use('/api', authRouter);
 app.use('/', adminRoutes);

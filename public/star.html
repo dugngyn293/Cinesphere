@@ -129,48 +129,94 @@
   <script>
     const container = document.getElementById('rated-movies');
 
-    function loadRatedMovies() {
+    async function loadRatedMovies() {
       container.innerHTML = '';
-      const movies = JSON.parse(localStorage.getItem('ratedMovies') || '[]');
+      console.log('🔄 Bắt đầu load rated movies...');
 
-      if (movies.length === 0) {
-        container.innerHTML = '<p style="text-align:center;">No movies rated yet.</p>';
-        return;
-      }
-
-      movies.forEach((movie, index) => {
-        const div = document.createElement('div');
-        div.className = 'movie';
-        div.innerHTML = `
-          <img src="${movie.poster}" alt="${movie.title}" />
-          <h3>${movie.title} (${movie.year})</h3>
-          <p class="star">
-            ${'★'.repeat(Math.max(0, Math.min(5, Number(movie.rating) || 0)))}
-            ${'☆'.repeat(Math.max(0, 5 - (Number(movie.rating) || 0)))}
-          </p>
-
-          <button class="delete-btn" data-index="${index}">🗑 Delete</button>
-        `;
-        container.appendChild(div);
-      });
-
-      document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', function () {
-          const index = parseInt(this.getAttribute('data-index'));
-          deleteMovie(index);
+      try {
+        const res = await fetch('/api/ratings/my', {
+          credentials: 'include'
         });
-      });
+
+        console.log('📡 Response status:', res.status);
+
+        if (!res.ok) {
+          console.error('❌ Failed to fetch ratings');
+          container.innerHTML = '<p style="text-align:center;color:#ff6b6b;">Failed to load ratings.</p>';
+          return;
+        }
+
+        const data = await res.json();
+        console.log('✅ Dữ liệu nhận được từ API:', data);
+
+        const movies = data.ratings || [];
+        console.log(`🎬 Số lượng phim đã đánh giá: ${movies.length}`);
+
+        if (movies.length === 0) {
+          container.innerHTML = '<p style="text-align:center;">No movies rated yet.</p>';
+          return;
+        }
+
+        movies.forEach((movie, index) => {
+          console.log(`🎥 Phim ${index + 1}:`, movie);
+
+          const title = movie.title || `Movie #${movie.movie_id || movie.id}`;
+          const year = movie.year || 'Unknown';
+          const poster = movie.poster || 'https://via.placeholder.com/300x450?text=No+Poster';
+
+          const div = document.createElement('div');
+          div.className = 'movie';
+          div.innerHTML = `
+            <img src="${poster}" alt="${title}" />
+            <h3>${title} (${year})</h3>
+            <p class="star">
+              ${'★'.repeat(Math.max(0, Math.min(5, Number(movie.rating) || 0)))}
+              ${'☆'.repeat(Math.max(0, 5 - (Number(movie.rating) || 0)))}
+            </p>
+
+            <button class="delete-btn" data-movie-id="${movie.movie_id || movie.id}">🗑 Delete</button>
+          `;
+          container.appendChild(div);
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+          button.addEventListener('click', function () {
+            const movieId = this.getAttribute('data-movie-id');
+            console.log('🗑 Xóa phim có ID:', movieId);
+            deleteMovie(movieId);
+          });
+        });
+
+      } catch (err) {
+        console.error('💥 Error loading ratings:', err);
+        container.innerHTML = '<p style="text-align:center;color:#ff6b6b;">Error loading ratings.</p>';
+      }
     }
 
-    function deleteMovie(index) {
-      const movies = JSON.parse(localStorage.getItem('ratedMovies') || '[]');
-      movies.splice(index, 1);
-      localStorage.setItem('ratedMovies', JSON.stringify(movies));
-      loadRatedMovies();
+    async function deleteMovie(movieId) {
+      try {
+        const res = await fetch(`/api/ratings/delete/${movieId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        console.log(`🗑 Gửi yêu cầu xóa movieId=${movieId}, status: ${res.status}`);
+
+        if (!res.ok) {
+          console.error('❌ Failed to delete rating');
+          return;
+        }
+
+        loadRatedMovies();
+      } catch (err) {
+        console.error('💥 Error deleting rating:', err);
+      }
     }
 
     loadRatedMovies();
   </script>
+
+
 </body>
 
 </html>

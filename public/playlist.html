@@ -113,8 +113,8 @@
   <div id="playlistApp">
     <h1>Your Playlist</h1>
     <div class="playlist-grid">
-      <movie-card v-for="(movie, index) in playlist" :key="movie.id" :movie="movie"
-        @remove="removeMovie(movie.id, index)" />
+      <movie-card v-for="(movie, index) in playlist" :key="movie.movie_id || movie.id" :movie="movie"
+        @remove="removeMovie(movie.movie_id || movie.id, index)" />
     </div>
     <button type="button" class="back-btn" onclick="window.location.href = '/index.html#openProfile'">
       ← Back to Settings
@@ -133,7 +133,7 @@
           <h3>{{ movie.title }}</h3>
           <p>{{ movie.year }}</p>
           <p>⭐ {{ movie.rating }}</p>
-          <button class="remove-btn" @click="$emit('remove')">❌ Remove</button>
+          <button class="remove-btn" @click="$emit('remove', movie.movie_id)">❌ Remove</button>
         </div>
       `
     };
@@ -150,7 +150,8 @@
           console.log("📡 Fetching playlist...");
           try {
             const res = await fetch('/api/playlist/my', {
-              credentials: 'include' // 👈 rất quan trọng để gửi session
+              credentials: 'include',
+              cache: 'no-store'
             });
             console.log("📥 Response status:", res.status);
             if (!res.ok) throw new Error('Failed to load playlist');
@@ -158,28 +159,31 @@
             const data = await res.json();
             console.log("✅ Playlist data:", data);
 
-            if (!data.playlists || !Array.isArray(data.playlists)) {
-              console.warn("⚠️ 'playlists' không tồn tại hoặc không phải mảng:", data.playlists);
+            if (!data.playlist || !Array.isArray(data.playlist)) {
+              console.warn("⚠️ 'playlist' does not exist or is not an array:", data.playlist);
+              return;
             }
 
-            this.playlist = data.playlists || [];
+            this.playlist = data.playlist;
+
           } catch (err) {
             console.error('❌ Error fetching playlist:', err);
           }
         },
 
         async removeMovie(movieId, index) {
-          console.log(`🗑 Đang xóa movie ID = ${movieId}, tại index ${index}`);
+          console.log(`🗑 deleting movie ID = ${movieId}, at index ${index}`);
           try {
             const res = await fetch(`/api/playlist/remove/${movieId}`, {
               method: 'DELETE',
-              credentials: 'include'
+              credentials: 'include',
+              cache: 'no-store' // 👈 đảm bảo không dùng cache
             });
             console.log("📥 Delete response status:", res.status);
 
             if (res.ok) {
-              console.log("✅ Xoá thành công:", movieId);
-              this.playlist.splice(index, 1);
+              console.log("✅ removed", movieId);
+              await this.fetchPlaylist();
             } else {
               const errorText = await res.text();
               console.error('❌ Failed to remove movie:', errorText);
@@ -188,6 +192,7 @@
             console.error('❌ Error removing movie:', err);
           }
         }
+
       },
       mounted() {
         this.fetchPlaylist();

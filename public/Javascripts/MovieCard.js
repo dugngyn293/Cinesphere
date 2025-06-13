@@ -55,7 +55,7 @@ export const MovieCard = {
     };
   },
   methods: {
-    rateMovie(star) {
+    async rateMovie(star) {
       this.selectedStars = star;
 
       const ratedMovie = {
@@ -66,20 +66,60 @@ export const MovieCard = {
         rating: star
       };
 
-      const ratedMovies = JSON.parse(localStorage.getItem('ratedMovies')) || [];
-      const updated = ratedMovies.filter((m) => m.id !== ratedMovie.id);
-      updated.push(ratedMovie);
+      try {
+        const res = await fetch('/api/ratings/rate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            movieId: ratedMovie.id,
+            rating: ratedMovie.rating,
+            title: ratedMovie.title,
+            poster: ratedMovie.poster,
+            year: ratedMovie.year
+          })
+        });
 
-      localStorage.setItem('ratedMovies', JSON.stringify(updated));
+        if (!res.ok) {
+          const err = await res.text();
+          console.error('❌ Failed to save rating:', err);
+          this.showToast('error', 'Rating Failed', 'Could not save your rating.');
+          return;
+        }
 
-      this.showToast('success', 'Rating Saved!', `You rated "${this.movie.title}" with ${star} star(s)!`);
+        this.showToast('success', 'Rating Saved!', `You rated "${ratedMovie.title}" with ${star} star(s)!`);
+      } catch (err) {
+        console.error('❌ Error rating movie:', err);
+        this.showToast('error', 'Rating Error', 'An unexpected error occurred.');
+      }
     },
+
 
     async addToPlaylist(movie) {
       try {
         console.log("🎬 Movie raw data:", movie);
 
-        // Sanitize and prepare payload
+        // Fetch current playlist to check for duplicates
+        const resPlaylist = await fetch('/api/playlist/my', {
+          credentials: 'include'
+        });
+
+        if (!resPlaylist.ok) {
+          console.warn("⚠️ Unable to fetch current playlist.");
+        }
+
+        const data = await resPlaylist.json();
+        const currentPlaylist = data.playlist || [];
+
+        const exists = currentPlaylist.some((item) => item.movie_id === movie.id || item.id === movie.id);
+        if (exists) {
+          this.showToast('info', 'Already Added', `"${movie.title}" is already in your playlist.`);
+          return;
+        }
+
+        // Prepare payload
         const payload = {
           id: movie.id || '',
           title: movie.title || '',
@@ -88,14 +128,13 @@ export const MovieCard = {
           rating: movie.rating === 'N/A' || movie.rating == null ? 0 : Number(movie.rating)
         };
 
-        // Validate before sending
         if (!payload.id || !payload.title || !payload.poster || !payload.year) {
-          console.warn("⚠️ Payload thiếu trường:", payload);
-          this.showToast('error', 'Invalid Movie', 'Movie info incomplete.');
+          console.warn("⚠️ Incomplete payload:", payload);
+          this.showToast('error', 'Invalid Movie', 'Movie information is incomplete.');
           return;
         }
 
-        console.log("📦 Payload gửi backend:", payload);
+        console.log("📦 Sending payload:", payload);
 
         const res = await fetch('/api/playlist/add', {
           method: 'POST',
@@ -105,19 +144,24 @@ export const MovieCard = {
         });
 
         if (!res.ok) {
+          if (res.status === 409) {
+            this.showToast('info', 'Already Added', `"${movie.title}" is already in your playlist.`);
+            return;
+          }
           const errorText = await res.text();
           console.error('❌ Add to playlist failed:', errorText);
-          this.showToast('error', 'Failed', `Could not add "${movie.title}" to playlist.`);
+          this.showToast('error', 'Failed', `Could not add "${movie.title}" to your playlist.`);
           return;
         }
 
-        const data = await res.json();
-        console.log("✅ Playlist add response:", data);
-        this.showToast('success', 'Added!', `"${movie.title}" added to your playlist!`);
+
+        const added = await res.json();
+        console.log("✅ Playlist add response:", added);
+        this.showToast('success', 'Added!', `"${movie.title}" has been added to your playlist!`);
 
       } catch (err) {
         console.error('❌ Error adding to playlist:', err);
-        this.showToast('error', 'Error', 'Unexpected error occurred.');
+        this.showToast('error', 'Error', 'An unexpected error occurred.');
       }
     },
 
