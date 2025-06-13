@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Edit Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .profile-box {
+            background: linear-gradient(135deg, #121212, #1e1e2f);
+            padding: 2rem;
+            border-radius: 20px;
+            width: 360px;
+            max-width: 90vw;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-box h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="file"] {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: none;
+            padding: 0.6rem;
+            width: 100%;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+        }
+
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 1rem auto;
+            display: block;
+            border: 4px solid #fff;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .input-group input:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .button.update {
+            background: linear-gradient(to right, #e53935, #e35d5b);
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .button.back {
+            background: #1e1e2f;
+            color: white;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="profile-box">
+        <h2>Edit Profile</h2>
+
+        <input type="file" id="avatarInput" />
+        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="avatarPreview" class="avatar-preview" />
+
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Your new username" />
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Your new password" />
+        </div>
+
+        <button class="button update" onclick="updateProfile()">Update Profile</button>
+
+        <button class="button back" onclick="window.location.href = '/index.html#openProfile'">← Back to
+            Profile</button>
+    </div>
+
+    <script>
+        const avatarInput = document.getElementById('avatarInput');
+        const avatarPreview = document.getElementById('avatarPreview');
+
+        avatarInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                avatarPreview.src = URL.createObjectURL(file);
+            }
+        });
+
+        async function updateProfile() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const avatar = avatarInput.files[0];
+
+            Swal.fire({
+                title: '📤 sending',
+                text: 'sending your profile update request...',
+                icon: 'info',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500,
+            });
+
+            if (!username || !password) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '⚠️ lacking information',
+                    text: 'fill in all fields before submitting.',
+                });
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("username", username);
+            formData.append("password", password);
+            if (avatar) {
+                formData.append("avatar", avatar);
+            }
+
+            try {
+                const res = await fetch('/api/update-profile', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const text = await res.text();
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '❌ server error',
+                        text: 'response from server is not valid JSON.',
+                    });
+                    return;
+                }
+
+                if (res.ok && data.success) {
+                    // ✅ Update successful
+                    localStorage.setItem("username", username);
+
+                    if (data.avatarUrl) {
+                        localStorage.setItem("avatar", data.avatarUrl);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '✅ update successful',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        toast: true,
+                        position: 'top-end',
+                    }).then(() => {
+                        window.location.href = 'index.html#openProfile';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '❌ update failed',
+                        text: data.message || 'undefined error occurred.',
+                    });
+                }
+            } catch (err) {
+                console.error("Update error:", err);
+                Swal.fire({
+                    icon: 'error',
+                    title: '❌ connection error',
+                    text: err.message || 'an error occurred while connecting to the server.',
+                });
+            }
+        }
+
+        function backToProfile() {
+            sessionStorage.setItem('goBackToProfileView', 'true');
+            window.location.href = 'index.html#openProfile';
+        }
+    </script>
+
+
+
+</body>
+
+</html>

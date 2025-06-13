@@ -1,7 +1,8 @@
+
 import { createApp } from 'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.esm-browser.js';
 
-import { SignUpForm } from './sign-up.js';
-import { SignInForm } from './sign-in.js';
+//import { SignUpForm } from './sign-up.js';
+//import { SignInForm } from './sign-in.js';
 import { UserProfile } from './user-profile.js';
 import { MovieCard } from './MovieCard.js';
 import { SectionTitle } from './SectionTitle.js';
@@ -9,15 +10,16 @@ import { TopTenAllTimes } from './top-10-all.js';
 import { CelebritiesSection } from './CelebritiesSection.js';
 import { TopRatedMovies } from './TopRatedMovies.js';
 import { TvSeries } from './TvSeries.js';
-import { TopTenUS } from './TopTenUS.js';
+import { TopTenUS } from './TopTenUs.js';
 import { TopTenChinese } from './TopTenChinese.js';
 import { TopTenKorean } from './TopTenKorean.js';
-import { TopTenAnime } from './TopTenAnime.js';
+import { TopTenJapanese } from './TopTenJapanese.js';
+import { SearchResultItem } from './SearchResultItem.js';
+import { Movies } from './Movies.js';
+import { TvShows } from './TvShows.js';
 
 const App = {
   components: {
-    SignUpForm,
-    SignInForm,
     UserProfile,
     MovieCard,
     SectionTitle,
@@ -28,21 +30,123 @@ const App = {
     TopTenUS,
     TopTenChinese,
     TopTenKorean,
-    TopTenAnime
+    TopTenJapanese,
+    SearchResultItem,
+    Movies,
+    TvShows
   },
   data() {
     return {
-      showSignupForm: false,
-      showSigninForm: false,
+      currentSection: 'home',
+      query: '',
+      results: [],
       showProfileForm: false,
-      isDarkMode: false
+      isDarkMode: false,
+      userAvatarUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+      userName: '',
+      currentPage: window.location.hash.replace('#', '') || 'home'
     };
   },
+  computed: {
+    searchQueryFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('query');
+    }
+  },
   mounted() {
+    const hash = window.location.hash;
+    this.updateSectionFromHash(hash);
+
+    window.addEventListener('hashchange', () => {
+      this.updateSectionFromHash(window.location.hash);
+    });
+    if (hash === '#movies') {
+      this.currentSection = 'movies';
+    } else if (hash === '#tv') {
+      this.currentSection = 'tv';
+    } else {
+      this.currentSection = 'home';
+    }
+
     this.isDarkMode = localStorage.getItem('theme') === 'dark';
     this.applyTheme();
+
+    const params = new URLSearchParams(window.location.search);
+    const usernameFromURL = params.get("username");
+    const avatarFromURL = params.get("avatar");
+
+    if (usernameFromURL) {
+      localStorage.setItem("username", usernameFromURL);
+      this.userName = usernameFromURL;
+    } else {
+      const storedUsername = localStorage.getItem("username");
+      if (storedUsername) this.userName = storedUsername;
+    }
+
+    if (avatarFromURL) {
+      localStorage.setItem("avatar", avatarFromURL);
+      this.userAvatarUrl = avatarFromURL;
+    } else {
+      const storedAvatar = localStorage.getItem("avatar");
+      if (storedAvatar) this.userAvatarUrl = storedAvatar;
+    }
+
+    const profile = JSON.parse(localStorage.getItem('userProfile'));
+    if (profile) {
+      this.userAvatarUrl = profile.avatarUrl || this.userAvatarUrl;
+      this.userName = profile.name || this.userName;
+    }
+
+    if (window.location.hash === '#openProfile') {
+      this.showProfileForm = true;
+    }
+
+    const currentQuery = this.searchQueryFromURL;
+    if (currentQuery) {
+      this.query = currentQuery;
+
+      fetch(`/api/search?query=${encodeURIComponent(currentQuery)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          this.results = data.results.map((movie) => ({
+            id: movie.id,
+            title: movie.title,
+            poster: movie.poster_path
+              ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+              : '/images/default.jpg',
+            year: (movie.release_date && movie.release_date.split('-')[0]) || 'N/A',
+            overview: movie.overview || '',
+          }));
+        })
+        .catch((err) => console.error('Search failed:', err));
+    }
+    window.addEventListener('hashchange', () => {
+      this.currentPage = window.location.hash.replace('#', '') || 'home';
+    });
   },
+
+
   methods: {
+    updateSectionFromHash(hash) {
+      if (hash === '#movies') {
+        this.currentSection = 'movies';
+      } else if (hash === '#tv') {
+        this.currentSection = 'tv';
+      } else {
+        this.currentSection = 'home';
+      }
+    },
+    handleProfileUpdate(profile) {
+      if (profile.avatarUrl) {
+        this.userAvatarUrl = profile.avatarUrl;
+        localStorage.setItem("avatar", profile.avatarUrl);
+      }
+      if (profile.name) {
+        this.userName = profile.name;
+        localStorage.setItem("username", profile.name);
+      }
+    },
+
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode;
       localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
@@ -54,37 +158,72 @@ const App = {
       } else {
         document.documentElement.classList.remove('dark');
       }
+    },
+    handleSearch() {
+      const encoded = encodeURIComponent(this.query);
+      window.location.href = `search.html?query=${encoded}`;
+    },
+
+
+    handleOpenDetail(id) {
+      window.location.href = `/MovieDetail.html?id=${id}`;
     }
   },
   template: `
     <div>
-      <Header 
-        @open-signup="showSignupForm = true"
-        @open-signin="showSigninForm = true"
-        @open-profile="showProfileForm = true" />
+      <Header
+        :avatar-url="userAvatarUrl"
+        :user-name="userName"
+        @open-profile="showProfileForm = true"
+      />
 
-      <SignUpForm :visible="showSignupForm" @close="showSignupForm = false" />
-      <SignInForm :visible="showSigninForm" @close="showSigninForm = false" />
-      <UserProfile :visible="showProfileForm" @close="showProfileForm = false" />
+      <UserProfile
+        :visible="showProfileForm"
+        @close="showProfileForm = false"
+        @profile-updated="handleProfileUpdate"
+      />
 
       <!-- 🌗 Dark Mode Toggle Button -->
       <button @click="toggleDarkMode" class="toggle-btn">
-        {{ isDarkMode ? '🌙 Dark Mode' : '☀️ Light Mode' }}
+        {{ isDarkMode ? '🌙' : '☀️' }}
       </button>
 
       <main>
         <article>
-          <HeroSection />
-          <TopTenAllTimes />
-          <CelebritiesSection />
-          <ServiceSection />
-          <TopRatedMovies />
-          <TvSeries />
-          <TopTenUS />
-          <TopTenChinese />
-          <TopTenKorean />
-          <TopTenAnime />
-          <CtaSection />
+          <input
+            v-model="query"
+            placeholder="Enter movie name..."
+            @keyup.enter="handleSearch"
+          />
+
+          <div v-if="searchQueryFromURL">
+            <h2>Search Results for "{{ query }}"</h2>
+            <div class="search-results">
+              <SearchResultItem
+                v-for="item in results"
+                :key="item.id"
+                :item="item"
+                @open-detail="handleOpenDetail"
+              />
+            </div>
+          </div>
+          <div v-else-if="currentPage === 'movies'">
+            <Movies />
+          </div>
+          <div v-else-if="currentPage === 'tv'">
+            <TvShows />
+          </div>
+          <template v-else>
+            <HeroSection />
+            <TopTenAllTimes />
+            <CelebritiesSection />
+            <TopRatedMovies />
+            <TvSeries />
+            <TopTenUS />
+            <TopTenChinese />
+            <TopTenKorean />
+            <TopTenJapanese />
+          </template>
         </article>
       </main>
 
@@ -96,8 +235,11 @@ const App = {
 
 
 
+
 // Header Component
 const Header = {
+  props: ['avatarUrl', 'userName'],
+
   template: `
     <header class="header" :class="{ active: isMenuActive }">
       <div class="container">
@@ -108,26 +250,32 @@ const Header = {
         </a>
 
         <div class="header-actions">
-          <button class="search-btn">
-            <ion-icon name="search-outline"></ion-icon>
-          </button>
+          <div class="search-wrapper">
+            <button class="search-btn" @click="toggleSearch">
+              <ion-icon name="search-outline"></ion-icon>
+            </button>
+            <input
+              v-show="showSearchInput"
+              v-model="searchQuery"
+              @keydown.enter="handleSearch"
+              class="search-input"
+              type="text"
+              placeholder="Search movies..."
+            />
+          </div>
 
           <div class="lang-wrapper">
             <label for="language">
               <ion-icon name="globe-outline"></ion-icon>
             </label>
-
-            <select name="language" id="language" v-model="selectedLanguage">
-              <option v-for="lang in languages" :key="lang.code" :value="lang.code">{{ lang.name }}</option>
-            </select>
           </div>
 
-          <button class="btn btn-primary" @click="$emit('open-signin')">Sign in</button>
-
-          <button class="btn btn-primary" @click="$emit('open-signup')">Sign up</button>
-          <div class="settings-button">
-            <img src="/images/avatar-default.png" class="user-avatar" @click="$emit('open-profile')" />
+          <!-- Profile avatar and username -->
+          <div class="settings-button" @click="$emit('open-profile')">
+            <img :src="avatarUrl || '/default-avatar.png'" class="user-avatar" alt="User avatar" />
+            <span v-if="userName" class="welcome-msg">Hi, {{ userName }}</span>
           </div>
+
         </div>
 
         <button class="menu-open-btn" @click="openMenu">
@@ -137,8 +285,7 @@ const Header = {
         <nav class="navbar" :class="{ active: isMenuActive }">
           <div class="navbar-top">
             <a href="./index.html" class="logo">
-              <img src="../images/logo.jpeg" alt="Filmlane logo" class="logo-img">
-
+              <img src="../images/logo.jpeg" alt="Cinesphere logo" class="logo-img">
             </a>
 
             <button class="menu-close-btn" @click="closeMenu">
@@ -148,7 +295,7 @@ const Header = {
 
           <ul class="navbar-list">
             <li v-for="item in navItems" :key="item.text">
-              <a :href="item.link" class="navbar-link">{{ item.text }}</a>
+              <a :href="'#' + item.page" class="navbar-link">{{ item.text }}</a>
             </li>
           </ul>
 
@@ -163,38 +310,54 @@ const Header = {
       </div>
     </header>
   `,
+
   data() {
     return {
       isMenuActive: false,
       selectedLanguage: 'en',
+      searchQuery: '',
+      showSearchInput: false,
       languages: [
-        { code: 'en', name: 'EN' },
+        { code: 'en', name: 'English' },
+        { code: 'vi', name: 'Vietnamese' }
       ],
       navItems: [
-        { text: 'Home', link: '../guests/index.html' },
-        { text: 'Movie', link: '#' },
-        { text: 'Tv Show', link: '#' },
-        { text: 'Web Series', link: '#' },
-        { text: 'Pricing', link: '#' }
+        { text: 'Home', page: 'home' },
+        { text: 'Movies', page: 'movies' },
+        { text: 'TV Series', page: 'tv' }
       ],
       socialMedia: [
-        { icon: 'logo-twitter', link: '#' },
         { icon: 'logo-facebook', link: '#' },
-        { icon: 'logo-pinterest', link: '#' },
-        { icon: 'logo-instagram', link: '#' },
-        { icon: 'logo-youtube', link: '#' }
+        { icon: 'logo-twitter', link: '#' },
+        { icon: 'logo-instagram', link: '#' }
       ]
-    }
+    };
   },
+
   methods: {
     openMenu() {
       this.isMenuActive = true;
     },
     closeMenu() {
       this.isMenuActive = false;
+    },
+    toggleSearch() {
+      this.showSearchInput = !this.showSearchInput;
+      this.$nextTick(() => {
+        const input = this.$el.querySelector('.search-input');
+        if (input && this.showSearchInput) input.focus();
+      });
+    },
+    handleSearch() {
+      if (this.searchQuery.trim() !== '') {
+        const encoded = encodeURIComponent(this.searchQuery.trim());
+        window.location.href = `/search.html?query=${encoded}`;
+      }
     }
+
   }
 };
+
 
 // Hero Section Component
 const HeroSection = {
@@ -202,7 +365,7 @@ const HeroSection = {
     <section class="hero">
       <div class="container">
         <div class="hero-content">
-          <p class="hero-subtitle">Filmlane</p>
+          <p class="hero-subtitle">Cinesphere</p>
 
           <h1 class="h1 hero-title">
             Unlimited <strong>Movie</strong>, TVs Shows, & More.
@@ -212,24 +375,6 @@ const HeroSection = {
             <div class="badge-wrapper">
               <div class="badge badge-fill">PG 18</div>
               <div class="badge badge-outline">HD</div>
-            </div>
-
-            <div class="ganre-wrapper">
-              <a href="#" v-for="(genre, index) in genres" :key="genre">
-                {{ genre }}{{ index < genres.length - 1 ? ',' : '' }}
-              </a>
-            </div>
-
-            <div class="date-time">
-              <div>
-                <ion-icon name="calendar-outline"></ion-icon>
-                <time datetime="2022">{{ releaseYear }}</time>
-              </div>
-
-              <div>
-                <ion-icon name="time-outline"></ion-icon>
-                <time datetime="PT128M">{{ duration }}</time>
-              </div>
             </div>
           </div>
 
@@ -246,134 +391,32 @@ const HeroSection = {
       genres: ['Romance', 'Drama'],
       releaseYear: '2022',
       duration: '128 min'
-    }
+    };
   }
 };
 
-
-// Service Section Component
-const ServiceSection = {
+// Footer Component
+const Footer = {
   template: `
-    <section class="service">
-      <div class="container">
-        <div class="service-banner">
-          <figure>
-            <img src="./assets/images/service-banner.jpg" alt="HD 4k resolution! only $3.99">
-          </figure>
-
-          <a href="./assets/images/service-banner.jpg" download class="service-btn">
-            <span>Download</span>
-            <ion-icon name="download-outline"></ion-icon>
-          </a>
-        </div>
-
-        <div class="service-content">
-          <p class="service-subtitle">Our Services</p>
-
-          <h2 class="h2 service-title">Download Your Shows Watch Offline.</h2>
-
-          <p class="service-text">
-            Lorem ipsum dolor sit amet, consecetur adipiscing elseddo eiusmod tempor.There are many variations of
-            passages of lorem Ipsum available, but the majority have suffered alteration in some injected humour.
-          </p>
-
-          <ul class="service-list">
-            <li v-for="service in services" :key="service.title">
-              <div class="service-card">
-                <div class="card-icon">
-                  <ion-icon :name="service.icon"></ion-icon>
-                </div>
-
-                <div class="card-content">
-                  <h3 class="h3 card-title">{{ service.title }}</h3>
-                  <p class="card-text">{{ service.description }}</p>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-  `,
-  data() {
-    return {
-      services: [
-        {
-          icon: 'tv',
-          title: 'Enjoy on Your TV.',
-          description: 'Lorem ipsum dolor sit amet, consecetur adipiscing elit, sed do eiusmod tempor.'
-        },
-        {
-          icon: 'videocam',
-          title: 'Watch Everywhere.',
-          description: 'Lorem ipsum dolor sit amet, consecetur adipiscing elit, sed do eiusmod tempor.'
-        }
-      ]
-    }
-  }
-};
-
-// CTA Section Component
-const CtaSection = {
-    template: `
-      <section class="cta">
-        <div class="container">
-          <div class="title-wrapper">
-            <h2 class="cta-title">Trial start first 30 days.</h2>
-            <p class="cta-text">
-              Enter your email to create or restart your membership.
-            </p>
-          </div>
-  
-          <form action="" class="cta-form" @submit.prevent="submitForm">
-            <input type="email" name="email" v-model="email" required placeholder="Enter your email" class="email-field">
-            <button type="submit" class="cta-form-btn">Get started</button>
-          </form>
-        </div>
-      </section>
-    `,
-    data() {
-      return {
-        email: ''
-      }
-    },
-    methods: {
-      submitForm() {
-        console.log('Submitted email:', this.email);
-        this.email = '';
-        // Here you would typically send the email to your backend
-        alert('Thank you for subscribing!');
-      }
-    }
-  };
-  
-  // Footer Component
-  const Footer = {
-    template: `
       <footer class="footer">
         <div class="footer-top">
           <div class="container">
             <div class="footer-brand-wrapper">
               <a href="./index.html" class="logo">
-                <img src="./assets/images/logo.svg" alt="Filmlane logo">
+               <img src="./images/logo.jpeg" alt="Cinesphere" class="footer-logo">
               </a>
-  
+
               <ul class="footer-list">
                 <li v-for="(link, index) in quickLinks" :key="index">
                   <a :href="link.href" class="footer-link">{{ link.text }}</a>
                 </li>
               </ul>
             </div>
-  
+
             <div class="divider"></div>
-  
+
             <div class="quicklink-wrapper">
-              <ul class="quicklink-list">
-                <li v-for="(link, index) in supportLinks" :key="index">
-                  <a :href="link.href" class="quicklink-link">{{ link.text }}</a>
-                </li>
-              </ul>
-  
+
               <ul class="social-list">
                 <li v-for="(social, index) in socialLinks" :key="index">
                   <a :href="social.href" class="social-link">
@@ -384,100 +427,84 @@ const CtaSection = {
             </div>
           </div>
         </div>
-  
+
         <div class="footer-bottom">
           <div class="container">
             <p class="copyright">
-              &copy; {{ currentYear }} <a href="#">Filmlane</a>. All Rights Reserved
+              &copy; {{ currentYear }} <a href="#">Cinesphere</a>.
             </p>
-  
-            <img src="./assets/images/footer-bottom-img.png" alt="Online banking companies logo" class="footer-bottom-img">
+
           </div>
         </div>
       </footer>
     `,
-    data() {
-      return {
-        currentYear: new Date().getFullYear(),
-        quickLinks: [
-          { text: 'Faq', href: '#' },
-          { text: 'Help center', href: '#' },
-          { text: 'Terms of use', href: '#' },
-          { text: 'Privacy', href: '#' }
-        ],
-        supportLinks: [
-          { text: 'Live', href: '#' },
-          { text: 'Faq', href: '#' },
-          { text: 'Privacy policy', href: '#' },
-          { text: 'Watch list', href: '#' }
-        ],
-        socialLinks: [
-          { icon: 'logo-facebook', href: '#' },
-          { icon: 'logo-twitter', href: '#' },
-          { icon: 'logo-pinterest', href: '#' },
-          { icon: 'logo-linkedin', href: '#' }
-        ]
-      }
-    }
-  };
-  
-  // Go To Top Button Component
-  const GoToTop = {
-    template: `
+  data() {
+    return {
+      currentYear: new Date().getFullYear(),
+      socialLinks: [
+        { icon: 'logo-facebook', href: '#' },
+        { icon: 'logo-twitter', href: '#' },
+        { icon: 'logo-pinterest', href: '#' },
+        { icon: 'logo-linkedin', href: '#' }
+      ]
+    };
+  }
+};
+
+// Go To Top Button Component
+const GoToTop = {
+  template: `
       <a href="#top" class="go-top" :class="{ active: isActive }" @click.prevent="scrollToTop">
         <ion-icon name="chevron-up"></ion-icon>
       </a>
     `,
-    data() {
-      return {
-        isActive: false
-      }
+  data() {
+    return {
+      isActive: false
+    };
+  },
+  mounted() {
+    window.addEventListener('scroll', this.handleScroll);
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
+  },
+  methods: {
+    handleScroll() {
+      this.isActive = window.scrollY > 500;
     },
-    mounted() {
-      window.addEventListener('scroll', this.handleScroll);
-    },
-    beforeUnmount() {
-      window.removeEventListener('scroll', this.handleScroll);
-    },
-    methods: {
-      handleScroll() {
-        this.isActive = window.scrollY > 500;
-      },
-      scrollToTop() {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }
+    scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     }
-  };
-  
-  // Register components
-  const app = createApp(App);
-  
-  // Register global components
-  app.component('Header', Header);
-  app.component('HeroSection', HeroSection);
-  app.component('TopTenAllTimes', TopTenAllTimes);
-  app.component('CelebritiesSection', CelebritiesSection);
-  app.component('ServiceSection', ServiceSection);
-  app.component('TopRatedMovies', TopRatedMovies);
-  app.component('TvSeries', TvSeries);
-  app.component('TopTenUS', TopTenUS);
-  app.component('TopTenChinese', TopTenChinese);
-  app.component('TopTenKorean', TopTenKorean);
-  app.component('TopTenAnime', TopTenAnime);
-  app.component('CtaSection', CtaSection);
-  app.component('Footer', Footer);
-  app.component('GoToTop', GoToTop);
-  app.component('MovieCard', MovieCard);
-  app.component('SectionTitle', SectionTitle);
-  
-  // Mount the app
-  app.component('SignInForm', SignInForm);
-  app.component('SignUpForm', SignUpForm);
-  app.component('UserProfile', UserProfile);
-  
+  }
+};
 
+// Register components
+const app = createApp(App);
 
-  app.mount('#app');
+// Register global components
+app.component('Header', Header);
+app.component('HeroSection', HeroSection);
+app.component('TopTenAllTimes', TopTenAllTimes);
+app.component('CelebritiesSection', CelebritiesSection);
+app.component('TopRatedMovies', TopRatedMovies);
+app.component('TvSeries', TvSeries);
+app.component('TopTenUS', TopTenUS);
+app.component('TopTenChinese', TopTenChinese);
+app.component('TopTenKorean', TopTenKorean);
+app.component('TopTenJapanese', TopTenJapanese);
+app.component('Footer', Footer);
+app.component('GoToTop', GoToTop);
+app.component('MovieCard', MovieCard);
+app.component('SectionTitle', SectionTitle);
+app.component('SearchResultItem', SearchResultItem);
+app.component('Movies', Movies);
+app.component('TvShows', TvShows);
+
+// Mount the app
+app.component('UserProfile', UserProfile);
+
+app.mount('#app');

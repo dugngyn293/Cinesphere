@@ -1,7 +1,5 @@
-// Top Ten Korean Component
 import { MovieCard } from './MovieCard.js';
 import { SectionTitle } from './SectionTitle.js';
-
 
 export const TopTenKorean = {
   components: {
@@ -11,7 +9,11 @@ export const TopTenKorean = {
   template: `
     <section class="upcoming">
       <div class="container">
-        <SectionTitle title="Top 10 Korean" />
+        <SectionTitle
+          title="Top 10 Korean"
+          :showFilters="true"
+          @filter-selected="handleFilter"
+        />
 
         <div class="slider-wrapper">
           <button class="slider-btn left" @click="scrollLeft">
@@ -19,8 +21,8 @@ export const TopTenKorean = {
           </button>
 
           <ul class="movies-list has-scrollbar" ref="koreanSlider">
-            <li v-for="movie in topKoreanMovies" :key="movie.id">
-              <MovieCard :movie="movie" />
+            <li v-for="item in topKoreanContent" :key="item.id">
+              <MovieCard :movie="item" @open-detail="goToDetail" />
             </li>
           </ul>
 
@@ -33,79 +35,12 @@ export const TopTenKorean = {
   `,
   data() {
     return {
-      topKoreanMovies: [
-        {
-          id: 1,
-          title: 'The Northman',
-          year: '2022',
-          poster: './assets/images/upcoming-1.png',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Doctor Strange in the Multiverse of Madness',
-          year: '2022',
-          poster: './assets/images/upcoming-2.png',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Memory',
-          year: '2022',
-          poster: './assets/images/upcoming-3.png',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        }
-      ]
+      topKoreanContent: [],
+      selectedFilter: 'Movies'
     };
+  },
+  mounted() {
+    this.fetchTopKoreanContent();
   },
   methods: {
     scrollLeft() {
@@ -113,6 +48,59 @@ export const TopTenKorean = {
     },
     scrollRight() {
       this.$refs.koreanSlider.scrollLeft += 400;
+    },
+    goToDetail(id) {
+      window.location.href = `./MovieDetail.html?id=${id}`;
+    },
+    handleFilter(filter) {
+      if (this.selectedFilter !== filter) {
+        this.selectedFilter = filter;
+        this.fetchTopKoreanContent();
+      }
+    },
+    async fetchTopKoreanContent() {
+      const apiKey = '6c90413a736469cc0670b634e5f3f7c1';
+      let url = '';
+
+      if (this.selectedFilter === 'TV Shows') {
+        url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&with_origin_country=KR&sort_by=vote_average.desc&vote_count.gte=100&language=en-US`;
+      } else {
+        url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_origin_country=KR&sort_by=vote_average.desc&vote_count.gte=100&language=en-US`;
+      }
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        this.topKoreanContent = (data.results || []).slice(0, 10).map((item) => {
+          let year = 'N/A';
+          if (item.release_date) {
+            year = item.release_date.slice(0, 4);
+          } else if (item.first_air_date) {
+            year = item.first_air_date.slice(0, 4);
+          }
+
+          return {
+            id: item.id,
+            title: item.title || item.name || 'Untitled',
+            year,
+            poster: item.poster_path
+              ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+              : null,
+            quality: this.randomQuality(),
+            duration: 'N/A',
+            durationISO: '',
+            rating: item.vote_average ? item.vote_average.toFixed(1) : 'NR',
+            overview: item.overview || 'No description available.'
+          };
+        });
+      } catch (error) {
+        console.error('Error fetching Korean content:', error);
+      }
+    },
+    randomQuality() {
+      const qualities = ['HD', '2K', '4K'];
+      return qualities[Math.floor(Math.random() * qualities.length)];
     }
   }
 };

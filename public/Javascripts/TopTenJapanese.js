@@ -1,7 +1,7 @@
 import { MovieCard } from './MovieCard.js';
 import { SectionTitle } from './SectionTitle.js';
 
-export const TopTenUS = {
+export const TopTenJapanese = {
   components: {
     MovieCard,
     SectionTitle
@@ -9,9 +9,8 @@ export const TopTenUS = {
   template: `
     <section class="upcoming">
       <div class="container">
-        <!-- Truyền sự kiện filter-selected -->
         <SectionTitle
-          title="Top 10 US"
+          title="Top 10 Japanese"
           :showFilters="true"
           @filter-selected="handleFilter"
         />
@@ -21,9 +20,9 @@ export const TopTenUS = {
             <ion-icon name="chevron-back-outline"></ion-icon>
           </button>
 
-          <ul class="movies-list has-scrollbar" ref="usSlider">
-            <li v-for="movie in topUsMovies" :key="movie.id">
-              <MovieCard :movie="movie" @open-detail="goToDetail" />
+          <ul class="movies-list has-scrollbar" ref="japaneseSlider">
+            <li v-for="item in topJapanese" :key="item.id">
+              <MovieCard :movie="item" @open-detail="goToDetail" />
             </li>
           </ul>
 
@@ -36,19 +35,19 @@ export const TopTenUS = {
   `,
   data() {
     return {
-      topUsMovies: [],
+      topJapanese: [],
       selectedFilter: 'Movies'
     };
   },
   mounted() {
-    this.fetchTopUsContent();
+    this.fetchTopJapaneseContent();
   },
   methods: {
     scrollLeft() {
-      this.$refs.usSlider.scrollLeft -= 400;
+      this.$refs.japaneseSlider.scrollLeft -= 400;
     },
     scrollRight() {
-      this.$refs.usSlider.scrollLeft += 400;
+      this.$refs.japaneseSlider.scrollLeft += 400;
     },
     goToDetail(id) {
       window.location.href = `./MovieDetail.html?id=${id}`;
@@ -56,24 +55,24 @@ export const TopTenUS = {
     handleFilter(filter) {
       if (this.selectedFilter !== filter) {
         this.selectedFilter = filter;
-        this.fetchTopUsContent();
+        this.fetchTopJapaneseContent();
       }
     },
-    async fetchTopUsContent() {
+    async fetchTopJapaneseContent() {
       const apiKey = '6c90413a736469cc0670b634e5f3f7c1';
       let url = '';
 
       if (this.selectedFilter === 'TV Shows') {
-        url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&with_origin_country=US&sort_by=vote_average.desc&vote_count.gte=500&language=en-US`;
+        url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&with_origin_country=JP&sort_by=vote_average.desc&vote_count.gte=100&language=en-US`;
       } else {
-        url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_origin_country=US&sort_by=vote_average.desc&vote_count.gte=1000&language=en-US`;
+        url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_origin_country=JP&sort_by=vote_average.desc&vote_count.gte=100&language=en-US`;
       }
 
       try {
         const res = await fetch(url);
         const data = await res.json();
 
-        this.topUsMovies = (data.results || []).slice(0, 10).map((item) => {
+        this.topJapanese = (data.results || []).slice(0, 10).map((item) => {
           let year = 'N/A';
           if (item.release_date) {
             year = item.release_date.slice(0, 4);
@@ -88,7 +87,7 @@ export const TopTenUS = {
             poster: item.poster_path
               ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
               : null,
-            quality: this.randomQuality(),
+            quality: 'HD',
             duration: 'N/A',
             durationISO: '',
             rating: item.vote_average ? item.vote_average.toFixed(1) : 'NR',
@@ -96,12 +95,8 @@ export const TopTenUS = {
           };
         });
       } catch (err) {
-        console.error('error:', err);
+        console.error('Failed to fetch top Japanese content:', err);
       }
-    },
-    randomQuality() {
-      const qualities = ['HD', '2K', '4K'];
-      return qualities[Math.floor(Math.random() * qualities.length)];
     }
   }
 };

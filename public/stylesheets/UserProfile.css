@@ -1,3 +1,4 @@
+/***** Overlay Wrapper *****/
 .profile-wrapper {
   position: fixed;
   inset: 0;
@@ -8,30 +9,246 @@
   z-index: 9999;
 }
 
+/***** Profile Box *****/
 .profile-box {
-  background: #fff;         
-  color: #000;             
-  padding: 2rem;
-  border-radius: 12px;
-  width: 320px;
+  background: linear-gradient(135deg, #121212, #1e1e2f);
+  color: #fff;
+  padding: 2rem 1.5rem;
+  border-radius: 20px;
+  width: 360px;
+  max-width: 90vw;
   position: relative;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.profile-box h2 {
+  margin-top: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
 }
 
 .btn-close {
   position: absolute;
-  top: 8px;
-  right: 12px;
+  top: 12px;
+  right: 16px;
   background: transparent;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   cursor: pointer;
-  color: #000;
+  color: #fff;
 }
 
-.avatar-preview {
-  margin-top: 0.5rem;
-  width: 80px;
-  height: 80px;
+/***** Avatar *****/
+.avatar-preview,
+.avatar-large {
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
+  display: block;
+  margin: 0 auto 1rem;
+  border: 4px solid #fff;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.avatar-large {
+  border: 3px solid #fff;
+}
+
+/***** Input Fields *****/
+.profile-box input[type="text"],
+.profile-box input[type="email"],
+.profile-box input[type="file"],
+.profile-box input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  transition: background 0.2s;
+}
+
+.profile-box input:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+/***** Input Group *****/
+.input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.input-group i {
+  color: #aaa;
+  margin-right: 10px;
+}
+
+.input-group input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+}
+
+/***** Menu & Buttons *****/
+.profile-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-menu li {
+  background-color: rgba(255, 255, 255, 0.08);
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-menu li:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.logout-button {
+  background: linear-gradient(to right, #911d36, #6e0b25);
+  color: white;
+  padding: 12px;
+  margin-top: 1.5rem;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.logout-button:hover {
+  opacity: 0.85;
+}
+
+.profile-btn {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+/***** Playlist Scroll Section *****/
+.scrollable-playlist {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.scrollable-playlist li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.remove-btn {
+  color: #ff6666;
+  cursor: pointer;
+  margin-left: 10px;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+
+.remove-btn:hover {
+  color: #ff2e2e;
+}
+
+/***** Responsive Adjustments *****/
+@media (max-width: 480px) {
+  .profile-box {
+    width: 90%;
+    padding: 1.5rem 1rem;
+    border-radius: 16px;
+  }
+
+  .profile-box h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .avatar-preview,
+  .avatar-large {
+    width: 80px;
+    height: 80px;
+    border-width: 3px;
+    margin-bottom: 1rem;
+  }
+
+  .btn-close {
+    top: 10px;
+    right: 12px;
+    font-size: 1.2rem;
+  }
+
+  .profile-menu li {
+    padding: 10px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  .logout-button {
+    padding: 10px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  .profile-box input[type="text"],
+  .profile-box input[type="email"],
+  .profile-box input[type="file"],
+  .profile-box input[type="password"] {
+    padding: 10px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
+  .input-group {
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .scrollable-playlist {
+    max-height: 200px;
+    padding-right: 4px;
+  }
+
+  .scrollable-playlist li {
+    font-size: 0.9rem;
+  }
+
+  .remove-btn {
+    font-size: 0.9rem;
+  }
 }

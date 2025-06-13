@@ -22,14 +22,16 @@ export const SectionTitle = {
 
       <ul class="filter-list" v-if="showFilters">
         <li v-for="filter in filters" :key="filter">
-          <button class="filter-btn">{{ filter }}</button>
+          <button class="filter-btn" @click="$emit('filter-selected', filter)">
+            {{ filter }}
+          </button>
         </li>
       </ul>
     </div>
   `,
   data() {
     return {
-      filters: ['Movies', 'TV Shows', 'Anime']
+      filters: ['Movies', 'TV Shows']
     };
   }
 };

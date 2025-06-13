@@ -1,0 +1,196 @@
+.tv-shows {
+    padding: 130px 20px 50px 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
+  
+  .tv-shows .section-title {
+    font-size: var(--fs-2);
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  .filter-list {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  
+  .filter-btn {
+    padding: 10px 20px;
+    border: 1px solid var(--btn-border);
+    border-radius: 5px;
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .filter-btn.active {
+    background-color: var(--btn-border);
+    color: var(--btn-bg);
+  }
+  
+  .filter-btn:hover {
+    background-color: var(--btn-border);
+    color: var(--btn-bg);
+  }
+  
+  .shows-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .show-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .show-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .show-poster {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  
+  .show-info {
+    padding: 15px;
+    text-align: center;
+  }
+  
+  .show-title {
+    font-size: var(--fs-5);
+    margin-bottom: 10px;
+  }
+  
+  .show-details {
+    font-size: var(--fs-7);
+    color: var(--card-meta-color);
+    margin-bottom: 5px;
+  }
+  
+  .show-rating {
+    font-size: var(--fs-6);
+    color: var(--btn-border);
+  }
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+  }
+  .modal-content {
+    background: #fff;
+    color: #f8f4f4;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    text-align: center;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 10px; right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+  }
+  .modal-poster {
+    width: 200px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .play-btn {
+    margin-top: 20px;
+    padding: 12px 32px;
+    font-size: 1.2rem;
+    background: #e50914;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .play-btn:hover {
+    background: #b0060f;
+  }
+  .modal-content::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 0;
+    border-radius: 10px;
+  }
+  .modal-content > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Responsive styles for TV Shows Page */
+@media (max-width: 900px) {
+  .shows-list {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .modal-content {
+    max-width: 98vw;
+    padding: 18px;
+  }
+  .modal-poster {
+    width: 140px;
+  }
+}
+
+@media (max-width: 600px) {
+  .tv-shows {
+    padding: 80px 5px 30px 5px;
+  }
+  .shows-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .show-card {
+    font-size: 0.95em;
+  }
+  .modal-content {
+    padding: 10px;
+    border-radius: 6px;
+  }
+  .modal-poster {
+    width: 100px;
+    margin-bottom: 10px;
+  }
+  .modal-close {
+    top: 2px;
+    right: 8px;
+    font-size: 1.5rem;
+  }
+  .play-btn {
+    padding: 8px 18px;
+    font-size: 1rem;
+  }
+  .tv-shows .section-title {
+    font-size: 1.3rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .tv-shows .section-title {
+    font-size: 2.5rem;
+  }
+  .show-title {
+    font-size: 1.5rem;
+  }
+}

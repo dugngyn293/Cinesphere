@@ -1,4 +1,3 @@
-// Top Rated Movies Component
 import { MovieCard } from './MovieCard.js';
 
 export const TopRatedMovies = {
@@ -9,17 +8,23 @@ export const TopRatedMovies = {
     <section class="top-rated">
       <div class="container">
         <p class="section-subtitle">Online Streaming</p>
-        <h2 class="h2 section-title">Top Rated Movies</h2>
+        <h2 class="h2 section-title">Top Rated</h2>
 
         <ul class="filter-list">
           <li v-for="filter in filters" :key="filter">
-            <button class="filter-btn">{{ filter }}</button>
+            <button
+              class="filter-btn"
+              :class="{ active: selectedFilter === filter }"
+              @click="changeFilter(filter)"
+            >
+              {{ filter }}
+            </button>
           </li>
         </ul>
 
         <ul class="movies-list">
           <li v-for="movie in topRatedMovies" :key="movie.id">
-            <MovieCard :movie="movie" />
+            <MovieCard :movie="movie" @open-detail="goToDetail" />
           </li>
         </ul>
       </div>
@@ -27,89 +32,71 @@ export const TopRatedMovies = {
   `,
   data() {
     return {
-      filters: ['Movies', 'TV Shows', 'Documentary', 'Sports'],
-      topRatedMovies: [
-        {
-          id: 1,
-          title: 'Sonic the Hedgehog 2',
-          year: '2022',
-          poster: './assets/images/movie-1.png',
-          quality: '2K',
-          duration: '122 min',
-          durationISO: 'PT122M',
-          rating: '7.8'
-        },
-        {
-          id: 2,
-          title: 'Morbius',
-          year: '2022',
-          poster: './assets/images/movie-2.png',
-          quality: 'HD',
-          duration: '104 min',
-          durationISO: 'PT104M',
-          rating: '5.9'
-        },
-        {
-          id: 3,
-          title: 'The Adam Project',
-          year: '2022',
-          poster: './assets/images/movie-3.png',
-          quality: '4K',
-          duration: '106 min',
-          durationISO: 'PT106M',
-          rating: '7.0'
-        },
-        {
-          id: 4,
-          title: 'Free Guy',
-          year: '2021',
-          poster: './assets/images/movie-4.png',
-          quality: '4K',
-          duration: '115 min',
-          durationISO: 'PT115M',
-          rating: '7.7'
-        },
-        {
-          id: 5,
-          title: 'The Batman',
-          year: '2022',
-          poster: './assets/images/movie-5.png',
-          quality: '4K',
-          duration: '176 min',
-          durationISO: 'PT176M',
-          rating: '7.9'
-        },
-        {
-          id: 6,
-          title: 'Uncharted',
-          year: '2022',
-          poster: './assets/images/movie-6.png',
-          quality: 'HD',
-          duration: '116 min',
-          durationISO: 'PT116M',
-          rating: '7.0'
-        },
-        {
-          id: 7,
-          title: 'Death on the Nile',
-          year: '2022',
-          poster: './assets/images/movie-7.png',
-          quality: '2K',
-          duration: '127 min',
-          durationISO: 'PT127M',
-          rating: '6.5'
-        },
-        {
-          id: 8,
-          title: "The King's Man",
-          year: '2021',
-          poster: './assets/images/movie-8.png',
-          quality: 'HD',
-          duration: '131 min',
-          durationISO: 'PT131M',
-          rating: '7.0'
-        }
-      ]
+      filters: ['Movies', 'TV Shows', 'Documentary'],
+      selectedFilter: 'Movies',
+      topRatedMovies: []
+    };
+  },
+  mounted() {
+    this.fetchTopRated();
+  },
+  methods: {
+    changeFilter(filter) {
+      if (this.selectedFilter !== filter) {
+        this.selectedFilter = filter;
+        this.fetchTopRated();
+      }
+    },
+    goToDetail(id) {
+      window.location.href = `./MovieDetail.html?id=${id}`;
+    },
+    async fetchTopRated() {
+      const apiKey = '6c90413a736469cc0670b634e5f3f7c1';
+      let url = '';
+
+      switch (this.selectedFilter) {
+        case 'TV Shows':
+          url = `https://api.themoviedb.org/3/tv/top_rated?api_key=${apiKey}&language=en-US&page=1`;
+          break;
+        case 'Documentary':
+          url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=99&sort_by=vote_average.desc&vote_count.gte=100&language=en-US&page=1`;
+          break;
+        case 'Movies':
+        default:
+          url = `https://api.themoviedb.org/3/movie/top_rated?api_key=${apiKey}&language=en-US&page=1`;
+          break;
+      }
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        this.topRatedMovies = (data.results || []).slice(0, 12).map((item) => {
+          let year = 'N/A';
+          if (item.release_date) {
+            year = item.release_date.slice(0, 4);
+          } else if (item.first_air_date) {
+            year = item.first_air_date.slice(0, 4);
+          }
+
+          return {
+            id: item.id,
+            title: item.title || item.name || 'Untitled',
+            year: year,
+            poster: item.poster_path
+              ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+              : null,
+            quality: 'HD',
+            duration: 'N/A',
+            durationISO: '',
+            rating: item.vote_average ? item.vote_average.toFixed(1) : 'NR',
+            overview: item.overview || 'No description available.'
+          };
+        });
+
+      } catch (err) {
+        console.error('Failed to fetch top rated content:', err);
+      }
     }
   }
 };
