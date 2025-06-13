@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Playlist</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0f0f0f;
+      color: white;
+      padding: 2rem 1rem;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1.8rem;
+    }
+
+    .playlist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      max-width: 700px;
+      margin: 0 auto;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .movie-card {
+      background: #1c1c2b;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 160px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+      transition: transform 0.2s;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.05);
+    }
+
+    .movie-card img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .movie-card h3 {
+      font-size: 1rem;
+      margin: 0.4rem 0;
+    }
+
+    .movie-card p {
+      margin: 0.2rem 0;
+      font-size: 0.85rem;
+    }
+
+    .remove-btn {
+      margin-top: 0.5rem;
+      background: crimson;
+      border: none;
+      color: white;
+      padding: 0.4rem 0.6rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .back-btn {
+      margin-top: 2rem;
+      padding: 0.7rem 1.5rem;
+      background: #3a3a3a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 1.5rem 1rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .movie-card {
+        width: 100%;
+        max-width: 280px;
+      }
+
+      .movie-card h3 {
+        font-size: 1.05rem;
+      }
+
+      .remove-btn {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="playlistApp">
+    <h1>Your Playlist</h1>
+    <div class="playlist-grid">
+      <movie-card v-for="(movie, index) in playlist" :key="movie.movie_id || movie.id" :movie="movie"
+        @remove="removeMovie(movie.movie_id || movie.id, index)" />
+    </div>
+    <button type="button" class="back-btn" onclick="window.location.href = '/index.html#openProfile'">
+      ← Back to Settings
+    </button>
+  </div>
+
+  <script type="module">
+    import { createApp } from 'https://cdn.jsdelivr.net/npm/vue@3/dist/vue.esm-browser.js';
+
+    const MovieCard = {
+      props: ['movie'],
+      emits: ['remove'],
+      template: `
+        <div class="movie-card">
+          <img :src="movie.poster || 'https://via.placeholder.com/180x270?text=No+Image'" :alt="movie.title" />
+          <h3>{{ movie.title }}</h3>
+          <p>{{ movie.year }}</p>
+          <p>⭐ {{ movie.rating }}</p>
+          <button class="remove-btn" @click="$emit('remove', movie.movie_id)">❌ Remove</button>
+        </div>
+      `
+    };
+
+    createApp({
+      components: { MovieCard },
+      data() {
+        return {
+          playlist: []
+        };
+      },
+      methods: {
+        async fetchPlaylist() {
+          console.log("📡 Fetching playlist...");
+          try {
+            const res = await fetch('/api/playlist/my', {
+              credentials: 'include',
+              cache: 'no-store'
+            });
+            console.log("📥 Response status:", res.status);
+            if (!res.ok) throw new Error('Failed to load playlist');
+
+            const data = await res.json();
+            console.log("✅ Playlist data:", data);
+
+            if (!data.playlist || !Array.isArray(data.playlist)) {
+              console.warn("⚠️ 'playlist' does not exist or is not an array:", data.playlist);
+              return;
+            }
+
+            this.playlist = data.playlist;
+
+          } catch (err) {
+            console.error('❌ Error fetching playlist:', err);
+          }
+        },
+
+        async removeMovie(movieId, index) {
+          console.log(`🗑 deleting movie ID = ${movieId}, at index ${index}`);
+          try {
+            const res = await fetch(`/api/playlist/remove/${movieId}`, {
+              method: 'DELETE',
+              credentials: 'include',
+              cache: 'no-store' // 👈 đảm bảo không dùng cache
+            });
+            console.log("📥 Delete response status:", res.status);
+
+            if (res.ok) {
+              console.log("✅ removed", movieId);
+              await this.fetchPlaylist();
+            } else {
+              const errorText = await res.text();
+              console.error('❌ Failed to remove movie:', errorText);
+            }
+          } catch (err) {
+            console.error('❌ Error removing movie:', err);
+          }
+        }
+
+      },
+      mounted() {
+        this.fetchPlaylist();
+      }
+    }).mount('#playlistApp');
+  </script>
+
+</body>
+
+</html>

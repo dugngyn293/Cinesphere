@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin - User Information</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./stylesheets/admin.css">
+</head>
+
+<body>
+    <div class="header">
+        <h1>ADMIN</h1>
+        <button class="logout-btn" onclick="logout()">Log Out</button>
+    </div>
+    <input type="search" id="searchUser" placeholder="Find user..." />
+
+    <h2>Google Sign-In Users</h2>
+    <div style="overflow-x: auto;">
+        <table id="googleUserTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Avatar</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Created At</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <h2>Username Sign-In Users</h2>
+    <div style="overflow-x: auto;">
+        <table id="usernameUserTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Avatar</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/admin/users', {
+                    credentials: 'include'
+                });
+                if (!response.ok) throw new Error('Network error');
+
+                const users = await response.json();
+                const googleTbody = document.querySelector('#googleUserTable tbody');
+                const usernameTbody = document.querySelector('#usernameUserTable tbody');
+
+                googleTbody.innerHTML = '';
+                usernameTbody.innerHTML = '';
+
+                let googleCount = 0;
+                let usernameCount = 0;
+
+                users.forEach((user) => {
+                    const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : '(no date)';
+                    const avatarUrl = user.profile_image_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                    const avatar = `<img src="${avatarUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="avatar" />`;
+                    const actions = `
+            <button class="reset-btn" onclick="resetPassword('${user.id}')">Reset</button>
+            <button class="action-btn" onclick="deleteUser('${user.id}')">Delete</button>
+          `;
+
+                    const rowHtml = user.google_id
+                        ? `<tr>
+                <td>${++googleCount}</td>
+                <td>${avatar}</td>
+                <td>${user.username}</td>
+                <td>********</td>
+                <td>${createdAt}</td>
+                <td>${user.email}</td>
+                <td>${actions}</td>
+              </tr>`
+                        : `<tr>
+                <td>${++usernameCount}</td>
+                <td>${avatar}</td>
+                <td>${user.username}</td>
+                <td>********</td>
+                <td>${createdAt}</td>
+                <td>${actions}</td>
+              </tr>`;
+
+                    user.google_id ? googleTbody.innerHTML += rowHtml : usernameTbody.innerHTML += rowHtml;
+                });
+            } catch (err) {
+                console.error('Error:', err);
+                document.querySelector('#googleUserTable tbody').innerHTML = '<tr><td colspan="7">Error loading users.</td></tr>';
+                document.querySelector('#usernameUserTable tbody').innerHTML = '<tr><td colspan="6">Error loading users.</td></tr>';
+            }
+        }
+
+        function resetPassword(userId) {
+            Swal.fire({
+                title: '🔒 Reset User Password',
+                html: `<input type="password" id="newPassword" class="swal2-input" placeholder="New password">`,
+                showCancelButton: true,
+                confirmButtonText: 'Save',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const newPassword = Swal.getPopup().querySelector('#newPassword').value;
+                    if (!newPassword) {
+                        Swal.showValidationMessage('Password cannot be empty!');
+                        return false;
+                    }
+                    return fetch(`/admin/reset-password/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newPassword }),
+                        credentials: 'include'
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.success) throw new Error(data.message || 'Failed to reset password.');
+                            return data;
+                        })
+                        .catch(err => Swal.showValidationMessage(`Request failed: ${err}`));
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '✅ Password Updated',
+                        text: result.value.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        position: 'top-end',
+                        toast: true
+                    });
+                }
+            });
+        }
+
+        function deleteUser(userId) {
+            Swal.fire({
+                title: '⚠️ Are you sure?',
+                text: 'This action cannot be undone. Do you really want to delete this user?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/delete-user/${userId}`, { method: 'DELETE', credentials: 'include' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: 'User successfully deleted from MySQL.',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                    position: 'top-end',
+                                    toast: true
+                                });
+                                fetchUsers();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Failed',
+                                    text: 'Failed to delete user: ' + data.message
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error deleting user.'
+                            });
+                        });
+                }
+            });
+        }
+
+        function logout() {
+
+            fetch('/api/logout', { method: 'POST' })
+                .finally(() => {
+                    // return auth.html
+                    localStorage.removeItem('username'); // delete username from localStorage
+                    window.location.href = 'auth.html';
+                });
+        }
+
+        document.getElementById('searchUser').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            const allRows = document.querySelectorAll('tbody tr');
+
+            allRows.forEach(row => {
+                const username = row.children[2].textContent.toLowerCase();
+                row.style.display = username.includes(searchValue) ? '' : 'none';
+            });
+        });
+
+        window.onload = fetchUsers;
+    </script>
+</body>
+
+</html>

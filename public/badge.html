@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Badge</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      text-align: center;
+      padding: 4rem 1rem;
+      margin: 0;
+    }
+
+    .badge-box {
+      background: #1e1e2f;
+      padding: 2rem 1rem;
+      border-radius: 15px;
+      max-width: 460px;
+      margin: 0 auto;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .points {
+      font-size: 1.5rem;
+      margin: 1rem 0;
+      color: #ffc107;
+    }
+
+    .badge {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      color: lightgreen;
+    }
+
+    .back-btn {
+      margin-top: 2rem;
+      padding: 0.7rem 1.5rem;
+      background: #3a3a3a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #555;
+    }
+
+    .rules {
+      margin-top: 2.5rem;
+      background: #2a2a3d;
+      padding: 1.2rem 1rem;
+      border-radius: 12px;
+      text-align: left;
+      font-size: 0.95rem;
+      color: #e0e0e0;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    .rules h3 {
+      margin-bottom: 0.5rem;
+      color: #ffd700;
+      font-size: 1.05rem;
+    }
+
+    .rules ul {
+      padding-left: 1.2rem;
+      margin: 0;
+    }
+
+    .rules li {
+      margin-bottom: 0.4rem;
+      line-height: 1.4;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      .points {
+        font-size: 1.2rem;
+      }
+
+      .badge {
+        font-size: 1.8rem;
+      }
+
+      .rules {
+        font-size: 0.9rem;
+      }
+
+      .back-btn {
+        font-size: 0.95rem;
+        padding: 0.6rem 1.2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="badge-box">
+    <h1>🏅 Your Badge</h1>
+    <div class="points" id="pointDisplay">Points: 0</div>
+    <div class="badge" id="badgeDisplay">Newbie</div>
+
+    <button type="button" class="back-btn" onclick="window.location.href = '/index.html#openProfile'">
+      Back to settings
+    </button>
+
+
+    <div class="rules">
+      <h3>📌 How to Earn Points</h3>
+      <ul>
+        <li>📅 +1 point for visiting the site (only once per day)</li>
+        <li>🎬 +1 point for each movie added to your playlist</li>
+      </ul>
+
+      <h3>🏅 Badge Levels</h3>
+      <ul>
+        <li>🥉 Beginner: 5+ points</li>
+        <li>🥈 Enthusiast: 15+ points</li>
+        <li>🥇 Master: 30+ points</li>
+        <li>🏆 Legend: 50+ points</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const today = new Date().toDateString();
+    const lastVisit = localStorage.getItem('lastVisit');
+    let points = parseInt(localStorage.getItem('points') || '0');
+
+    if (lastVisit !== today) {
+      points += 1;
+      localStorage.setItem('points', points);
+      localStorage.setItem('lastVisit', today);
+    }
+
+    const playlist = JSON.parse(localStorage.getItem('playlist') || '[]');
+    const moviePoints = playlist.length;
+    const totalPoints = points + moviePoints;
+
+    document.getElementById('pointDisplay').textContent = `Points: ${totalPoints}`;
+
+    let badge = 'Newbie';
+    if (totalPoints >= 50) badge = '🏆 Legend';
+    else if (totalPoints >= 30) badge = '🥇 Master';
+    else if (totalPoints >= 15) badge = '🥈 Enthusiast';
+    else if (totalPoints >= 5) badge = '🥉 Beginner';
+
+    document.getElementById('badgeDisplay').textContent = badge;
+  </script>
+</body>
+
+</html>

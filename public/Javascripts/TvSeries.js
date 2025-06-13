@@ -1,8 +1,7 @@
-// TV Series Component
-
 import { MovieCard } from './MovieCard.js';
-    export const TvSeries = {
-    components: {
+
+export const TvSeries = {
+  components: {
     MovieCard
   },
   template: `
@@ -16,7 +15,7 @@ import { MovieCard } from './MovieCard.js';
 
           <ul class="movies-list" ref="scrollContainer">
             <li v-for="series in tvSeries" :key="series.id">
-              <MovieCard :movie="series" />
+              <MovieCard :movie="series" @open-detail="goToDetail" />
             </li>
           </ul>
 
@@ -27,89 +26,11 @@ import { MovieCard } from './MovieCard.js';
   `,
   data() {
     return {
-      tvSeries: [
-        {
-          id: 1,
-          title: 'Moon Knight',
-          year: '2022',
-          poster: './assets/images/series-1.png',
-          quality: '2K',
-          duration: '47 min',
-          durationISO: 'PT47M',
-          rating: '8.6'
-        },
-        {
-          id: 2,
-          title: 'Halo',
-          year: '2022',
-          poster: './assets/images/series-2.png',
-          quality: '2K',
-          duration: '59 min',
-          durationISO: 'PT59M',
-          rating: '8.8'
-        },
-        {
-          id: 3,
-          title: 'Vikings: Valhalla',
-          year: '2022',
-          poster: './assets/images/series-3.png',
-          quality: '2K',
-          duration: '51 min',
-          durationISO: 'PT51M',
-          rating: '8.3'
-        },
-        {
-          id: 4,
-          title: 'Money Heist',
-          year: '2017',
-          poster: './assets/images/series-4.png',
-          quality: '4K',
-          duration: '70 min',
-          durationISO: 'PT70M',
-          rating: '8.3'
-        },
-        {
-          id: 4,
-          title: 'Money Heist',
-          year: '2017',
-          poster: './assets/images/series-4.png',
-          quality: '4K',
-          duration: '70 min',
-          durationISO: 'PT70M',
-          rating: '8.3'
-        },
-        {
-          id: 4,
-          title: 'Money Heist',
-          year: '2017',
-          poster: './assets/images/series-4.png',
-          quality: '4K',
-          duration: '70 min',
-          durationISO: 'PT70M',
-          rating: '8.3'
-        },
-        {
-          id: 4,
-          title: 'Money Heist',
-          year: '2017',
-          poster: './assets/images/series-4.png',
-          quality: '4K',
-          duration: '70 min',
-          durationISO: 'PT70M',
-          rating: '8.3'
-        },
-        {
-          id: 4,
-          title: 'Money Heist',
-          year: '2017',
-          poster: './assets/images/series-4.png',
-          quality: '4K',
-          duration: '70 min',
-          durationISO: 'PT70M',
-          rating: '8.3'
-        },
-      ]
+      tvSeries: []
     };
+  },
+  mounted() {
+    this.fetchTopTvSeries();
   },
   methods: {
     scrollLeft() {
@@ -117,6 +38,38 @@ import { MovieCard } from './MovieCard.js';
     },
     scrollRight() {
       this.$refs.scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
+    },
+    goToDetail(id) {
+      window.location.href = `./MovieDetail.html?id=${id}`;
+    },
+    async fetchTopTvSeries() {
+      const apiKey = '6c90413a736469cc0670b634e5f3f7c1';
+      const url = `https://api.themoviedb.org/3/tv/top_rated?api_key=${apiKey}&language=en-US&page=1`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        this.tvSeries = (data.results || []).slice(0, 10).map((tv) => ({
+          id: tv.id,
+          title: tv.name,
+          year: tv.first_air_date ? tv.first_air_date.slice(0, 4) : 'N/A',
+          poster: tv.poster_path
+            ? `https://image.tmdb.org/t/p/w500${tv.poster_path}`
+            : null,
+          quality: this.randomQuality(),
+          duration: 'N/A',
+          durationISO: '',
+          rating: tv.vote_average ? tv.vote_average.toFixed(1) : 'NR',
+          overview: tv.overview || 'No description available.'
+        }));
+      } catch (error) {
+        console.error('error', error);
+      }
+    },
+    randomQuality() {
+      const qualities = ['HD', '2K', '4K'];
+      return qualities[Math.floor(Math.random() * qualities.length)];
     }
   }
 };

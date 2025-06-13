@@ -1,7 +1,5 @@
-// Top celebrities
 import { MovieCard } from './MovieCard.js';
 import { SectionTitle } from './SectionTitle.js';
-
 
 export const CelebritiesSection = {
   components: {
@@ -11,7 +9,10 @@ export const CelebritiesSection = {
   template: `
     <section class="upcoming">
       <div class="container">
-        <SectionTitle title="Celebrities" />
+        <SectionTitle
+          title="Celebrities"
+          @filter-selected="handleFilter"
+        />
 
         <div class="slider-wrapper">
           <button class="slider-btn left" @click="scrollLeft">
@@ -19,7 +20,11 @@ export const CelebritiesSection = {
           </button>
 
           <ul class="movies-list has-scrollbar" ref="celebritySlider">
-            <li v-for="celebrity in celebrities" :key="celebrity.id" class="movie-item">
+            <li
+              v-for="celebrity in filteredCelebrities"
+              :key="celebrity.id"
+              class="movie-item"
+            >
               <MovieCard :movie="celebrity" />
             </li>
           </ul>
@@ -33,68 +38,20 @@ export const CelebritiesSection = {
   `,
   data() {
     return {
-      celebrities: [
-        {
-          id: 1,
-          title: 'The Northman',
-          year: '2022',
-          poster: './assets/images/upcoming-1.png',
-          quality: 'HD',
-          duration: '137 min',
-          durationISO: 'PT137M',
-          rating: '8.5'
-        },
-        {
-          id: 2,
-          title: 'Doctor Strange in the Multiverse of Madness',
-          year: '2022',
-          poster: './assets/images/upcoming-2.png',
-          quality: '4K',
-          duration: '126 min',
-          durationISO: 'PT126M',
-          rating: 'NR'
-        },
-        {
-          id: 3,
-          title: 'Memory',
-          year: '2022',
-          poster: './assets/images/upcoming-3.png',
-          quality: '2K',
-          duration: 'N/A',
-          durationISO: '',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        },{
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        },
-        {
-          id: 4,
-          title: 'The Unbearable Weight of Massive Talent',
-          year: '2022',
-          poster: './assets/images/upcoming-4.png',
-          quality: 'HD',
-          duration: '107 min',
-          durationISO: 'PT107M',
-          rating: 'NR'
-        },
-      ]
+      celebrities: [],
+      selectedFilter: 'Movies'
     };
+  },
+  computed: {
+    filteredCelebrities() {
+      const type = this.selectedFilter === 'TV Shows' ? 'tv' : 'movie';
+      return this.celebrities.filter((person) =>
+        person.knownForMediaTypes.includes(type)
+      );
+    }
+  },
+  mounted() {
+    this.fetchCelebrities();
   },
   methods: {
     scrollLeft() {
@@ -102,6 +59,40 @@ export const CelebritiesSection = {
     },
     scrollRight() {
       this.$refs.celebritySlider.scrollLeft += 400;
+    },
+    handleFilter(filter) {
+      this.selectedFilter = filter;
+    },
+    async fetchCelebrities() {
+      const apiKey = '510215c9eeaff8af2bc03a26010d9bbb';
+      const url = `https://api.themoviedb.org/3/person/popular?api_key=${apiKey}&language=en-US&page=1`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        this.celebrities = (data.results || []).slice(0, 20).map((person) => {
+          const knownForTypes = (person.known_for || []).map((media) => media.media_type);
+
+          return {
+            id: person.id,
+            title: person.name,
+            year: person.known_for_department
+              ? `Known for: ${person.known_for_department}`
+              : 'Known for: N/A',
+            poster: person.profile_path
+              ? `https://image.tmdb.org/t/p/w500${person.profile_path}`
+              : null,
+            quality: 'Popular',
+            duration: '',
+            durationISO: '',
+            rating: person.popularity ? person.popularity.toFixed(1) : 'N/A',
+            knownForMediaTypes: knownForTypes
+          };
+        });
+      } catch (error) {
+        console.error('Error fetching celebrities:', error);
+      }
     }
   }
 };
